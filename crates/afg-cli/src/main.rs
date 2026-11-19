@@ -11,7 +11,10 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
+mod backends;
+mod doctor;
 mod init;
+mod project;
 
 pub const POLICY_FILE: &str = "agentforge.yaml";
 
@@ -35,12 +38,25 @@ struct Cli {
 enum Command {
     /// Create agentforge.yaml for this repository from detection results.
     Init(init::InitArgs),
+    /// Show detected projects, policy decisions, backend status and risks.
+    Doctor(doctor::DoctorArgs),
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
+    let rt = match tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+    {
+        Ok(rt) => rt,
+        Err(e) => {
+            eprintln!("afg: error: starting runtime: {e}");
+            return ExitCode::from(EXIT_EXEC_ERROR);
+        }
+    };
     let result = match cli.command {
         Command::Init(a) => init::run(a),
+        Command::Doctor(a) => rt.block_on(doctor::run(a)),
     };
     match result {
         Ok(code) => code,
