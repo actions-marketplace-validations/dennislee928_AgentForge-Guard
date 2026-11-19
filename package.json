@@ -1,0 +1,9 @@
+{
+  "name": "agentforge-guard-packages",
+  "private": true,
+  "packageManager": "pnpm@9.10.0",
+  "scripts": {
+    "check": "pnpm -r run check",
+    "test": "pnpm -r run test"
+  }
+}

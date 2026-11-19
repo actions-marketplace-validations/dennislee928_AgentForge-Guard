@@ -76,3 +76,16 @@ jobs:
         with:
           working-directory: examples/polyglot-monorepo
           upload-sarif: "false"
+
+  packages:
+    # TypeScript packages: generated policy types must match the schema (T11.1).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm -r run check
