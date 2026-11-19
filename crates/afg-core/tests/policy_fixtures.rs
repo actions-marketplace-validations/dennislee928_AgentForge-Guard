@@ -87,3 +87,22 @@ pub fn run_dir(dir: &str) -> usize {
 fn policy_fixtures() {
     assert!(run_dir("tests/policy-fixtures") >= 40);
 }
+
+#[test]
+fn adversarial_cases_never_allow() {
+    // Meta-check: an adversarial case may only expect deny or route.
+    let dir = repo_root().join("tests/adversarial");
+    for e in std::fs::read_dir(&dir).unwrap() {
+        let p = e.unwrap().path();
+        let fx = FixtureFile::from_yaml(&std::fs::read_to_string(&p).unwrap()).unwrap();
+        for c in &fx.cases {
+            assert!(
+                matches!(c.expect, afg_core::Effect::Deny | afg_core::Effect::Route),
+                "{}: adversarial case {:?} must expect deny or route",
+                p.display(),
+                c.argv
+            );
+        }
+    }
+    assert!(run_dir("tests/adversarial") >= 60);
+}
