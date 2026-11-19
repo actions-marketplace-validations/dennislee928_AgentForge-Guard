@@ -49,7 +49,7 @@ enum Command {
     Init(init::InitArgs),
     /// Show detected projects, policy decisions, backend status and risks.
     Doctor(doctor::DoctorArgs),
-    /// Explain decisions, validate a policy or print its schema.
+    /// Explain, validate, trust, migrate or print the schema of the policy.
     #[command(subcommand)]
     Policy(policy_cmd::PolicyCommand),
     /// Run a command under the policy (managed mode).

@@ -11,13 +11,37 @@
 
 Status: **v0.5.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
 
+## Install
+
+```sh
+cargo install agentforge-guard                # from crates.io, once published; installs `afg`
+# or: download a signed binary from GitHub Releases (verify it with its .sigstore.json bundle)
+# or: brew install agentforge-guard/tap/afg   (once the tap exists; see packaging/homebrew)
+```
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `afg init` | Write `agentforge.yaml` from detected stacks, and pin it as trusted |
+| `afg doctor` | Detected projects, per-command decisions, backend health, trust status, risks |
+| `afg run -- <argv>` | Run a command under the policy (managed mode, the only mode that enforces) |
+| `afg policy explain -- <argv>` | Show a decision without running anything |
+| `afg policy validate` / `schema` | Check the policy / print its JSON Schema |
+| `afg policy trust` | Pin the reviewed policy; later edits deny every command until it is re-trusted |
+| `afg policy migrate --write` | Upgrade `agentforge.dev/v1alpha1` to `v1` |
+| `afg approve [<id>]` | A human approves a pending `require-approval` request |
+| `afg audit tail` / `show` / `report --format sarif` | Read the audit log, or export it for code scanning |
+| `afg agents sync claude\|codex` | Generate agent settings, hooks and instructions from the policy |
+| `afg hook claude-pretool` / `claude-posttool-format` | Claude Code hooks (registered by `agents sync`) |
+
 ## Quickstart
 
 Requires Rust 1.89+. Docker is optional and only needed for the container backend.
 
 ```sh
 git clone <this repository> agentforge-guard && cd agentforge-guard
-cargo install --path crates/afg-cli          # installs the `afg` binary
+cargo install --path crates/afg-cli          # from source; installs the `afg` binary
 
 cd examples/polyglot-monorepo                # or any repository of yours
 afg init --force                             # writes agentforge.yaml from detected stacks
@@ -63,7 +87,7 @@ argv ─► normalize ─► protected paths ─► rules ─► fallback ─►
 - **TOCTOU checks.** The program and any script arguments are pinned (hashed) when the decision is made and re-checked just before execution.
 - **The container backend** runs `docker run` with `--network none --read-only --cap-drop ALL --security-opt no-new-privileges`, a non-root user, memory, CPU and pids limits, and a *copy* of the workspace that excludes gitignored and credential files. The Docker socket and `$HOME` are never mounted. **Changes made inside the container are discarded.**
 
-The policy format is described in [docs/policy-reference.md](docs/policy-reference.md), and the design decisions in [docs/adr/](docs/adr/).
+All documentation is indexed in [docs/README.md](docs/README.md).
 
 ## Agent integration (Claude Code, Codex)
 
