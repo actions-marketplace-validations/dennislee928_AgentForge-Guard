@@ -505,3 +505,53 @@ fn out_of_band_approval_tokens() {
     with_home(&["approve"]).assert().success();
     with_home(&["approve", "--yes", "../../x"]).assert().code(2);
 }
+
+/// CLAUDE.md and AGENTS.md sections come from one template: they are
+/// identical apart from the agent's name, and match the committed snapshot.
+/// Run with `AFG_BLESS=1` to update it.
+#[test]
+fn agent_instructions_share_one_template() {
+    let r = Repo::initialized();
+    r.afg()
+        .args(["agents", "sync", "claude"])
+        .assert()
+        .success();
+    r.afg().args(["agents", "sync", "codex"]).assert().success();
+    let claude = std::fs::read_to_string(r.root.join("CLAUDE.md")).unwrap();
+    let codex = std::fs::read_to_string(r.root.join("AGENTS.md")).unwrap();
+    let section = |s: &str| {
+        let b = s.find("<!-- agentforge:begin").unwrap();
+        let e = s.find("<!-- agentforge:end -->").unwrap();
+        s[b..e].to_owned()
+    };
+    let (c, x) = (section(&claude), section(&codex));
+    assert_eq!(
+        c.replace("Claude Code", "AGENT"),
+        x.replace("Codex", "AGENT")
+    );
+
+    let snap = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/snapshots/instructions.md");
+    let generic = c.replace("Claude Code", "AGENT");
+    if std::env::var_os("AFG_BLESS").is_some() {
+        std::fs::write(&snap, &generic).unwrap();
+    }
+    assert!(
+        std::fs::read_to_string(&snap).unwrap_or_default() == generic,
+        "instruction template changed; review and run with AFG_BLESS=1"
+    );
+}
+
+/// This repository's own contributor files share one body (Phase 0 note).
+#[test]
+fn repo_contributor_files_share_one_body() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let body = |f: &str| {
+        std::fs::read_to_string(root.join(f))
+            .unwrap()
+            .lines()
+            .skip(4)
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    assert_eq!(body("CLAUDE.md"), body("AGENTS.md"));
+}
