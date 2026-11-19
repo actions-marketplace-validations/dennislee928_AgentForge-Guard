@@ -1,0 +1,30 @@
+// Deployment config for the AgentForge Guard Cloudflare backend.
+// Verify against the current Containers/Sandbox docs before deploying:
+// moving a class to scheduling_policy "durable_object" cannot be undone.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "agentforge-sandbox",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "containers": [
+    {
+      "class_name": "AfgSandbox",
+      "name": "agentforge-sandbox-containers",
+      "scheduling_policy": "durable_object"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "AFG_SANDBOX", "class_name": "AfgSandbox" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AfgSandbox"] }],
+  "vars": {
+    // Set to the image you pushed (see README). Pin by digest.
+    "AFG_IMAGE": "REPLACE_WITH_IMAGE_REFERENCE",
+    "MAX_ARCHIVE_BYTES": "67108864",
+    "MAX_TIMEOUT_SECONDS": "600",
+    "MAX_OUTPUT_BYTES": "65536",
+    "SESSION_TTL_SECONDS": "900"
+  }
+  // Secret: wrangler secret put AFG_SIGNING_KEY   (64 hex chars, same as afg's key)
+}

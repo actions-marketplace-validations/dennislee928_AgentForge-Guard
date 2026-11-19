@@ -1,0 +1,6 @@
+{
+  "note": "Fake test key. Shared by the Rust signer and the Worker verifier tests (T11.5).",
+  "keyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "body": "{\"version\":1,\"kind\":\"execute\",\"id\":\"01a1f45b58d8-a359828fc6a4c34a\",\"issuedAt\":1800000000,\"argv\":[\"sh\",\"scripts/check.sh\"],\"cwd\":\"\",\"env\":{},\"timeoutSeconds\":60,\"network\":\"none\",\"archive\":\"\",\"manifestHash\":\"sha256:00\"}",
+  "header": "v1=59612da4ddd48c2ff860e602bf311de74c5fdff5ecb0439b52f8f5775e437d1f"
+}

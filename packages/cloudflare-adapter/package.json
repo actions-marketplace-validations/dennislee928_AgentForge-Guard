@@ -1,0 +1,19 @@
+{
+  "name": "@agentforge/cloudflare-adapter",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Cloudflare Worker + Containers backend for AgentForge Guard. Executes pre-approved, signed requests only; makes no policy decisions.",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "tsc --noEmit && vitest run"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261119.1",
+    "typescript": "7.0.2",
+    "vitest": "5.1.1",
+    "wrangler": "4.165.0"
+  }
+}
