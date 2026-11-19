@@ -212,7 +212,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - A mocked Worker that checks the contract.
   - An opt-in live test that needs `CF_*` env vars.
   - A test proving that protected files never appear in the upload manifest.
-- [ ] **T11.6** Write `docs/provider-compatibility.md`, covering the CI fidelity limits: OIDC, privileged Docker and service containers.
+- [x] **T11.6** Write `docs/provider-compatibility.md`, covering the CI fidelity limits: OIDC, privileged Docker and service containers.
 - **Gate:** run the alignment check and tag `v0.4.0`.
 
 ## Milestone v0.5 — Optional Native Helper & Mojo Plugin (experimental, gated)
