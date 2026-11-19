@@ -127,7 +127,7 @@ Working rules for execution:
 - **Gate:** run the alignment check.
 
 ### Phase 3 — Executors (`afg-executor`)
-- [ ] **T3.1** Write the `Executor` trait (`execute` and `cleanup`), along with `ExecutionRequest`, `ExecutionResult` and `ExecutionError`.
+- [x] **T3.1** Write the `Executor` trait (`execute` and `cleanup`), along with `ExecutionRequest`, `ExecutionResult` and `ExecutionError`.
 - [ ] **T3.2** Write the local executor:
   - No shell; it runs `Command::new(abs_path)`.
   - The environment is cleared, then only allowlisted variables are passed.

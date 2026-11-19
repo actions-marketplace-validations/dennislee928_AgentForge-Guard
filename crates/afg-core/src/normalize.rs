@@ -90,6 +90,10 @@ pub struct Normalized {
     /// every original argument after the unwrapped executable. Wrappers are
     /// dropped, because afg applies its own timeout and environment.
     pub exec_argv: Vec<String>,
+    /// The unwrapped argv exactly as given: the executable as written, then
+    /// its arguments. Used by backends that resolve executables themselves,
+    /// such as containers, where host paths do not apply.
+    pub inner_argv: Vec<String>,
     /// The effective working directory (after `git -C`).
     pub cwd: PathBuf,
     pub opaque: Vec<OpaqueReason>,
@@ -300,6 +304,7 @@ pub fn normalize(argv: &[String], env: &Env<'_>) -> Normalized {
         program: None,
         args: Vec::new(),
         exec_argv: Vec::new(),
+        inner_argv: Vec::new(),
         cwd: env.cwd.to_path_buf(),
         opaque: Vec::new(),
         forbidden: None,
@@ -407,6 +412,7 @@ pub fn normalize(argv: &[String], env: &Env<'_>) -> Normalized {
         rest.to_vec()
     };
 
+    out.inner_argv = argv[idx..].to_vec();
     out.exec_argv = std::iter::once(
         out.program
             .as_ref()
@@ -669,6 +675,7 @@ mod tests {
         assert_eq!(n.args, v(&["delete", "ns", "x"]));
         assert!(!n.is_opaque());
         assert_eq!(n.exec_argv, v(&["kubectl", "delete", "ns", "x"]));
+        assert_eq!(n.inner_argv, v(&["kubectl", "delete", "ns", "x"]));
     }
 
     #[test]
