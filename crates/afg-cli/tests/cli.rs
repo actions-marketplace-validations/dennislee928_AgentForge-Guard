@@ -303,8 +303,15 @@ fn untrusted_script_runs_in_container_without_host_secrets_or_network() {
 
 #[test]
 fn example_policy_matches_init_output() {
+    for name in ["polyglot-monorepo", "zig-project"] {
+        check_example_policy(name);
+    }
+}
+
+fn check_example_policy(name: &str) {
     let example = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../examples/polyglot-monorepo")
+        .join("../../examples")
+        .join(name)
         .canonicalize()
         .unwrap();
     let out = Command::cargo_bin("afg")
@@ -317,7 +324,7 @@ fn example_policy_matches_init_output() {
     let committed = std::fs::read_to_string(example.join("agentforge.yaml")).unwrap();
     assert!(
         String::from_utf8(out.stdout).unwrap() == committed,
-        "examples/polyglot-monorepo/agentforge.yaml is stale; regenerate it with `afg init --force --dir examples/polyglot-monorepo`"
+        "examples/{name}/agentforge.yaml is stale; regenerate it with `afg init --force --dir examples/{name}`"
     );
 }
 

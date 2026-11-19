@@ -34,6 +34,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      # Live toolchain tests (crates/afg-cli/tests/toolchains.rs) skip without these.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.1
       - run: cargo test --workspace
       - name: Docker isolation tests (Linux reference runner)
         if: runner.os == 'Linux'

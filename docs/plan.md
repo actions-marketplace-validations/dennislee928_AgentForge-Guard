@@ -199,7 +199,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 - [x] **T10.2** Add a Zig profile (`build.zig`, `build.zig.zon` → `zig build`, `zig build test`) and a Zig version check.
 - [x] **T10.3** Add a Python profile, which is needed before Mojo. `pip install` is T2.
 - [x] **T10.4** Add a Mojo profile, covering detection and a build command only.
-- [ ] **T10.5** Add Go and Zig to the CI matrix, which un-ignores the live toolchain tests. Add `examples/zig-project`.
+- [x] **T10.5** Add Go and Zig to the CI matrix, which un-ignores the live toolchain tests. Add `examples/zig-project`.
 - **Gate:** run the alignment check and tag `v0.3.0`.
 
 ## Milestone v0.4 — Cloudflare Sandbox Backend (TypeScript)
