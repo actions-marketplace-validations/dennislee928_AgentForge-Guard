@@ -34,6 +34,7 @@ pub enum StackKind {
     Node,
     Zig,
     Python,
+    Mojo,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

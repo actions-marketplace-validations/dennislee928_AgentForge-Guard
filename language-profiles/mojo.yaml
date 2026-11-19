@@ -1,0 +1,10 @@
+# Mojo sources (experimental support: detection plus a build command).
+# `{marker}` is the first matching source file in the directory.
+kind: mojo
+markers: ["*.mojo", "*.🔥"]
+traits:
+  mojoproject: mojoproject.toml
+  pixi: pixi.toml
+commands:
+  - { tier: T0, argv: [mojo, --version], purpose: toolchain version }
+  - { tier: T1, argv: [mojo, build, "{marker}"], purpose: build }

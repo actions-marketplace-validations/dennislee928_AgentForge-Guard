@@ -53,6 +53,7 @@ pub const BUILTIN: &[(&str, &str)] = &[
         "python",
         include_str!("../../../language-profiles/python.yaml"),
     ),
+    ("mojo", include_str!("../../../language-profiles/mojo.yaml")),
 ];
 
 pub fn builtin_profiles() -> Vec<Profile> {

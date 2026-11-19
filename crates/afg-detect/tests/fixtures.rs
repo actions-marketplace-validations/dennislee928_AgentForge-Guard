@@ -140,3 +140,18 @@ fn python_project() {
     assert!(cmds.contains(&("pytest".into(), Tier::T1)));
     assert!(cmds.contains(&("pip install -e .".into(), Tier::T2)));
 }
+
+#[test]
+fn mojo_project() {
+    let d = detect_all(&fixture("mojo"));
+    assert_eq!(d.projects.len(), 1);
+    let p = &d.projects[0];
+    assert_eq!(p.kind, StackKind::Mojo);
+    assert_eq!(p.markers, ["main.mojo"]);
+    assert_eq!(p.traits, ["mojoproject"]);
+    assert!(
+        p.commands
+            .iter()
+            .any(|c| c.argv == ["mojo", "build", "main.mojo"] && c.tier == Tier::T1)
+    );
+}
