@@ -248,3 +248,10 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 ## Alignment log
 
 - 2026-11-19 — T0.1: `license` field in Cargo deferred to T0.5 (no `Cargo.toml` exists yet). LICENSE-APACHE uses the standard terms-only text (as in serde).
+- 2026-11-19 — **Phase 0 aligned.** Gate passed (build, fmt, clippy `-D warnings`, test, cargo-deny). Deviations and notes:
+  - The T0.1 Cargo `license` field landed in T0.5 as `workspace.package.license`.
+  - No `repository` URL in Cargo metadata, because no remote exists yet. Add it before publishing (T13.4).
+  - The workspace uses edition 2024 with `rust-version = "1.85"` and `unsafe_code = "forbid"`. If a later task needs `unsafe` (for example process-group kill in T3.2), prefer a safe crate such as `nix` or `rustix` over relaxing the lint.
+  - `CLAUDE.md` and `AGENTS.md` share one body by hand for now. T8.2 replaces this with a generated template and a snapshot test.
+  - CI runs `--ignored` (Docker isolation) tests on Linux only, which matches the T3.6 / v0.1 gate.
+  - No scope drift. Next: Phase 1 (T1.1).
