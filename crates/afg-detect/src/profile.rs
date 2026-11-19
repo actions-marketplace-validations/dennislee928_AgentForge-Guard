@@ -49,6 +49,10 @@ pub struct ProfileCommand {
 pub const BUILTIN: &[(&str, &str)] = &[
     ("go", include_str!("../../../language-profiles/go.yaml")),
     ("zig", include_str!("../../../language-profiles/zig.yaml")),
+    (
+        "python",
+        include_str!("../../../language-profiles/python.yaml"),
+    ),
 ];
 
 pub fn builtin_profiles() -> Vec<Profile> {

@@ -124,3 +124,19 @@ fn zig_project_with_minimum_version() {
     assert!(cmds.contains(&("zig build test".into(), Tier::T1)));
     assert!(cmds.contains(&("zig build --fetch".into(), Tier::T2)));
 }
+
+#[test]
+fn python_project() {
+    let d = detect_all(&fixture("python"));
+    assert_eq!(d.projects.len(), 1);
+    let p = &d.projects[0];
+    assert_eq!(p.kind, StackKind::Python);
+    assert_eq!(p.traits, ["uv"]);
+    let cmds: Vec<_> = p
+        .commands
+        .iter()
+        .map(|c| (c.argv.join(" "), c.tier))
+        .collect();
+    assert!(cmds.contains(&("pytest".into(), Tier::T1)));
+    assert!(cmds.contains(&("pip install -e .".into(), Tier::T2)));
+}

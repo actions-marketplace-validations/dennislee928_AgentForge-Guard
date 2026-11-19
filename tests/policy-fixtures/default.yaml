@@ -25,6 +25,10 @@ cases:
   - { argv: [timeout, "60", cargo, test], expect: allow, note: wrapper unwrapped }
   - { argv: [zig, build, test], expect: allow, rule: local-validation }
   - { argv: [zig, version], expect: allow, rule: read-only-tools }
+  - { argv: [pytest, -q], expect: allow, rule: local-validation }
+  - { argv: [ruff, check, .], expect: allow }
+  - { argv: [python, -m, pytest], expect: route, backend: container, note: interpreters are opaque }
+  - { argv: [pip, install, -e, .], expect: require-approval, rule: dependency-install }
   - { argv: [zig, build, --fetch], expect: deny, rule: "builtin:fallback", note: "T2 fetch is excluded from the [zig, build] allow" }
   # Constraints
   - { argv: [git, diff, --ext-diff], expect: deny, rule: "builtin:fallback" }

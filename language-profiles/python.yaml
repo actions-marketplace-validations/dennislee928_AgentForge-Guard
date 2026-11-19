@@ -1,0 +1,13 @@
+# Python projects. Test and lint tools import project code, so they are T1
+# arbitrary code. Installs run package build hooks and need the network (T2).
+kind: python
+markers: [pyproject.toml, setup.py, setup.cfg, requirements.txt, Pipfile]
+traits:
+  uv: uv.lock
+  poetry: poetry.lock
+  pipenv: Pipfile.lock
+commands:
+  - { tier: T1, argv: [ruff, check, .], purpose: lint }
+  - { tier: T1, argv: [mypy, .], purpose: type check }
+  - { tier: T1, argv: [pytest], purpose: tests }
+  - { tier: T2, argv: [pip, install, -e, .], purpose: install the project and dependencies }
