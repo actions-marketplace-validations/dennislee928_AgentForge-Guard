@@ -9,17 +9,12 @@
 //!   outlive the run.
 
 use std::path::Path;
-use std::process::Stdio;
-use std::time::Instant;
 
-use crate::capture::capture;
+use crate::process::{Spawn, run};
 use crate::{ExecutionError, ExecutionRequest, ExecutionResult, Executor};
 
 #[derive(Debug, Default, Clone)]
 pub struct LocalExecutor;
-
-/// How long to wait for output pipes to drain after the process exits.
-const DRAIN_GRACE: std::time::Duration = std::time::Duration::from_secs(2);
 
 impl Executor for LocalExecutor {
     fn name(&self) -> &'static str {
@@ -36,56 +31,22 @@ impl Executor for LocalExecutor {
             )));
         }
         crate::verify_pins(&req)?;
-
-        let mut cmd = tokio::process::Command::new(program);
-        cmd.args(&req.argv[1..])
-            .current_dir(&req.cwd)
-            .env_clear()
-            .envs(req.env.iter().map(|(k, v)| (k, v)))
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .kill_on_drop(true);
-        #[cfg(unix)]
-        cmd.process_group(0);
-
-        let start = Instant::now();
-        let mut child = cmd.spawn().map_err(|source| ExecutionError::Spawn {
-            program: program.clone(),
-            source,
-        })?;
-        let pid = child.id();
-
-        let out = child.stdout.take().expect("piped");
-        let err = child.stderr.take().expect("piped");
-        let limit = req.capture_limit;
-        let (tee_out, tee_err) = if req.stream {
-            (Some(tokio::io::stdout()), Some(tokio::io::stderr()))
-        } else {
-            (None, None)
-        };
-        let out_task = tokio::spawn(capture(out, limit, tee_out));
-        let err_task = tokio::spawn(capture(err, limit, tee_err));
-
-        let (status, timed_out) = match tokio::time::timeout(req.timeout, child.wait()).await {
-            Ok(status) => (Some(status?), false),
-            Err(_) => {
-                kill_group(pid);
-                let _ = child.kill().await;
-                (child.wait().await.ok(), true)
-            }
-        };
-        // Reap any background processes that the command left behind.
-        kill_group(pid);
-
-        let stdout = join_capture(out_task).await?;
-        let stderr = join_capture(err_task).await?;
+        let f = run(Spawn {
+            program,
+            args: &req.argv[1..],
+            cwd: &req.cwd,
+            env: &req.env,
+            timeout: req.timeout,
+            stream: req.stream,
+            capture_limit: req.capture_limit,
+        })
+        .await?;
         Ok(ExecutionResult {
-            exit_code: status.and_then(|s| s.code()),
-            timed_out,
-            duration_ms: start.elapsed().as_millis() as u64,
-            stdout,
-            stderr,
+            exit_code: f.exit_code,
+            timed_out: f.timed_out,
+            duration_ms: f.duration_ms,
+            stdout: f.stdout,
+            stderr: f.stderr,
             details: vec![("program".into(), program.clone())],
         })
     }
@@ -95,33 +56,10 @@ impl Executor for LocalExecutor {
     }
 }
 
-async fn join_capture(
-    task: tokio::task::JoinHandle<std::io::Result<crate::Captured>>,
-) -> Result<crate::Captured, ExecutionError> {
-    match tokio::time::timeout(DRAIN_GRACE, task).await {
-        Ok(Ok(r)) => Ok(r?),
-        Ok(Err(e)) => Err(ExecutionError::Io(std::io::Error::other(e))),
-        Err(_) => Err(ExecutionError::Io(std::io::Error::other(
-            "output pipe did not close",
-        ))),
-    }
-}
-
-#[cfg(unix)]
-fn kill_group(pid: Option<u32>) {
-    if let Some(pid) = pid.and_then(|p| rustix::process::Pid::from_raw(p as i32)) {
-        // ESRCH (the group is already gone) is expected.
-        let _ = rustix::process::kill_process_group(pid, rustix::process::Signal::KILL);
-    }
-}
-
-#[cfg(not(unix))]
-fn kill_group(_pid: Option<u32>) {}
-
 #[cfg(all(test, unix))]
 mod tests {
     use super::*;
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
 
     fn req(argv: &[&str]) -> ExecutionRequest {
         ExecutionRequest {

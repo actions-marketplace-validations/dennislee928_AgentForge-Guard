@@ -10,10 +10,13 @@ use std::time::Duration;
 use serde::Serialize;
 
 pub mod capture;
+pub mod docker;
 pub mod local;
 pub mod pin;
+pub mod process;
 pub mod snapshot;
 
+pub use docker::{DockerConfig, DockerExecutor};
 pub use local::LocalExecutor;
 pub use pin::PinnedFile;
 
@@ -133,5 +136,15 @@ pub fn sha256_hex(digest: &[u8]) -> String {
 
 /// Re-verify every pinned file. This is a no-op until T3.5 wires it in.
 pub(crate) fn verify_pins(_req: &ExecutionRequest) -> Result<(), ExecutionError> {
+    Ok(())
+}
+
+/// Re-verify pinned workspace files against their snapshot copies. This is a
+/// no-op until T3.5 wires it in.
+pub(crate) fn verify_pins_in_snapshot(
+    _req: &ExecutionRequest,
+    _root: &std::path::Path,
+    _snapshot: &std::path::Path,
+) -> Result<(), ExecutionError> {
     Ok(())
 }

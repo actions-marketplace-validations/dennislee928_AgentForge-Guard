@@ -134,7 +134,7 @@ Working rules for execution:
   - It enforces the timeout and kills the whole process group.
   - It captures and streams output.
 - [x] **T3.3** Write the snapshot builder: it builds a manifest from git-tracked files minus protected patterns, copies them to a temp dir, and records the manifest hash.
-- [ ] **T3.4** Write the Docker executor, which builds the argv as specified in Architecture and checks that Docker is available.
+- [x] **T3.4** Write the Docker executor, which builds the argv as specified in Architecture and checks that Docker is available.
 - [ ] **T3.5** Add TOCTOU re-verification: script hashes and executable identity are re-checked immediately before spawning.
 - [ ] **T3.6** Write isolation tests in `tests/sandbox-isolation/`. Each one is `#[ignore]` unless Docker is present.
   - A fake host `.env` and a fake `~/.ssh` key are unreadable from inside the container.
