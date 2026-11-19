@@ -58,3 +58,14 @@ jobs:
       - run: cargo build -p afg-cli
       - run: docker pull debian:stable-slim
       - run: scripts/ci-demos.sh target/debug/afg
+
+  action:
+    # Self-test of the composite action (action.yml) on the example repository.
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          working-directory: examples/polyglot-monorepo
+          upload-sarif: "false"
