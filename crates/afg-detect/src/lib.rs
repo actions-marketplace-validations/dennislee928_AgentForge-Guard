@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 
 pub mod go;
+pub mod rust;
 
 /// Trust tier of a suggested command (docs/threat-model.md).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -97,7 +98,7 @@ pub const SKIP_DIRS: &[&str] = &[
 pub const MAX_DEPTH: usize = 6;
 
 pub fn default_detectors() -> Vec<Box<dyn Detector>> {
-    vec![Box::new(go::GoDetector)]
+    vec![Box::new(go::GoDetector), Box::new(rust::RustDetector)]
 }
 
 /// Walk `root` and run every detector in every directory.
