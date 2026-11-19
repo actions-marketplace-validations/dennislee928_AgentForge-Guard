@@ -317,3 +317,17 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Release.** Version bumped to `0.1.0`, fast-forward merged to `main`, and tagged `v0.1.0` locally. Nothing was pushed.
   - **Scope check against the reference.** v0.1 delivers the reference's "Rust CLI + Policy Engine + Docker Sandbox" success criterion: `afg init → afg doctor → afg run → audit report` on a fresh Go/Rust/Next.js repository, with the dangerous command denied and the restricted container unable to reach host test credentials. MCP was dropped, per the user's decision (ADR 0005).
   - Next: milestone v0.2 (Phase 7, T7.1), on branch `milestone/v0.2`.
+- 2026-11-19 — **Phase 7 aligned.** Gate passed: 152 tests, the 11 Docker tests and cargo-deny. The Claude Code hook contract was verified against the current official docs before T7.1:
+  - Input is `tool_input.command` on stdin.
+  - Output is `hookSpecificOutput.permissionDecision` (`allow` / `deny` / `ask` / `defer`) with `permissionDecisionReason`, on exit 0.
+  - Registration uses `hooks.PreToolUse[].matcher` plus `hooks[].{type, command, args, timeout}`. `args` is exec form, with no shell.
+  - Permission precedence is deny > ask > allow, path rules use the `~/` and `//` anchors, and Edit rules cover every file-editing tool.
+
+  Deviations and additions:
+  - **Tokenizer location.** The shell-string tokenizer and `Engine::evaluate_shell` live in `afg-core`, which keeps decisions in one engine (ADR 0002). Unparseable strings are evaluated as the opaque `sh -c <string>`.
+  - **Hook mapping.** `route` becomes `deny` with `afg run` guidance, because native Bash can't route. `allow` becomes **defer** by default, since native Bash doesn't clear the environment the way `afg run` does; `--allow-mode allow` is opt-in.
+  - **No allow rules from sync.** `afg agents sync claude` generates no Bash *allow* rules, because Claude's prefix rules can't express `denyArgs`. It generates Read/Edit deny rules for protected paths and Bash deny/ask rules that mirror the policy.
+  - **Formatter hook.** The PostToolUse formatter (T7.2) runs its formatter through the policy and the local executor. `[rustfmt]` was added to all built-in T1 rules, and the example policy was regenerated.
+  - **T7.4 approval tokens.** This task was added during the Phase 5 alignment. `afg` refusing to run itself is now a built-in forbidden rule, and `~/.config/agentforge` is a built-in protected path. The residual risk (an agent unconfined by afg) is documented.
+  - **Open.** The CLI-level multicall regression test from the Phase 6 follow-up is still pending; it moves to T9.3.
+  - Next: Phase 8 (T8.1). The Codex config keys must be verified against the official docs first.
