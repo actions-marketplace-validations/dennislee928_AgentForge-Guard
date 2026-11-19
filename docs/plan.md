@@ -90,7 +90,7 @@ Working rules for execution:
   - 0006 Dual license.
 - [x] **T0.4** Write `docs/threat-model.md` (trust tiers T0–T3, attacker = the agent or the code it generated, assets, bypass classes) and `docs/security-boundaries.md`, which spells out managed mode versus integration mode.
 - [x] **T0.5** Create the Cargo workspace skeleton with the five crates. Add `rust-toolchain.toml`, `rustfmt.toml`, `deny.toml`, and update `.gitignore` to cover `target/` and `.agentforge/audit/`.
-- [ ] **T0.6** Write `CLAUDE.md` and `AGENTS.md` for contributors: the TDD rule, the Definition of Done commands, and "never weaken a deny test".
+- [x] **T0.6** Write `CLAUDE.md` and `AGENTS.md` for contributors: the TDD rule, the Definition of Done commands, and "never weaken a deny test".
 - [ ] **T0.7** Add `.github/workflows/ci.yml`, which runs fmt, clippy with `-D warnings`, test and cargo-deny on Linux and macOS.
 - **Gate:** `cargo build` and `cargo test --workspace` pass with zero tests. Run the alignment check.
 
