@@ -1,0 +1,179 @@
+# yaml-language-server: $schema=../agentforge.schema.json
+# AgentForge Guard CI policy: non-interactive, so nothing can be approved.
+# Validation runs on the (disposable) runner, scripts run in a container, and
+# installs and infrastructure changes are denied; deploy from a separate,
+# human-controlled pipeline.
+apiVersion: agentforge.dev/v1alpha1
+kind: AgentPolicy
+
+project:
+  name: my-project
+  root: "."
+
+agents: []
+
+execution:
+  default: local
+  fallback: deny
+  backends:
+    local:
+      enabled: true
+      timeoutSeconds: 600
+    container:
+      enabled: true
+      image: debian:stable-slim
+      network: none
+      readOnlyRootfs: true
+      memoryMB: 2048
+      cpus: 2
+      pidsLimit: 256
+      timeoutSeconds: 300
+    cloudflare:
+      enabled: false
+
+rules:
+  # T0: read-only inspection.
+  - id: read-only-git
+    effect: allow
+    commands:
+      - [git, status]
+      - [git, diff]
+      - [git, log]
+      - [git, show]
+      - [git, branch]
+      - [git, rev-parse]
+      - [git, ls-files]
+      - [git, blame]
+    # These options can run external programs or write files.
+    denyArgs: [--ext-diff, --textconv, --output, --exec, --upload-pack, --open-files-in-pager]
+
+  - id: read-only-tools
+    effect: allow
+    commands:
+      - [ls]
+      - [pwd]
+      - [cat]
+      - [head]
+      - [tail]
+      - [wc]
+      - [cargo, metadata]
+      - [cargo, tree]
+      - [go, list]
+      - [go, version]
+      - [go, env]
+      - [kubectl, get]
+      - [kubectl, describe]
+      - [kubectl, logs]
+
+  - id: ripgrep
+    effect: allow
+    commands: [[rg]]
+    # --pre runs a program per file; the others search ignored files and
+    # hidden files, where secrets usually live.
+    denyArgs: [--pre, --pre-glob, --no-ignore*, --hidden, -u*, -.]
+
+  # T1: local build and verification. Build scripts and tests run arbitrary
+  # code with your privileges (docs/threat-model.md).
+  - id: local-validation
+    effect: allow
+    commands:
+      - [cargo, check]
+      - [cargo, clippy]
+      - [cargo, fmt]
+      - [cargo, test]
+      - [cargo, build]
+      - [go, build]
+      - [go, vet]
+      - [go, test]
+      - [gofmt]
+      - [pnpm, lint]
+      - [pnpm, test]
+      - [pnpm, build]
+      - [pnpm, typecheck]
+      - [pnpm, tsc]
+      - [npm, run, lint]
+      - [npm, run, test]
+      - [npm, run, build]
+      - [npm, test]
+      - [yarn, lint]
+      - [yarn, test]
+      - [yarn, build]
+    denyArgs: [--config*]
+
+  # T2: untrusted code runs in a container with no network.
+  - id: isolated-scripts
+    effect: route
+    backend: container
+    commands:
+      - [bash]
+      - [sh]
+      - [zsh]
+      - [python]
+      - [python3]
+      - [node]
+      - [make]
+
+  # Dependency installation runs package lifecycle scripts and needs the
+  # network, so a human decides.
+  - id: dependency-install
+    effect: deny
+    commands:
+      - [npm, install]
+      - [npm, ci]
+      - [pnpm, install]
+      - [pnpm, add]
+      - [yarn, install]
+      - [yarn, add]
+      - [bun, install]
+      - [pip, install]
+      - [pip3, install]
+      - [cargo, install]
+      - [cargo, add]
+      - [go, install]
+      - [go, get]
+
+  # T3: infrastructure mutation and publishing.
+  - id: infra-changes
+    effect: deny
+    commands:
+      - [kubectl, apply]
+      - [kubectl, create]
+      - [kubectl, replace]
+      - [kubectl, patch]
+      - [kubectl, edit]
+      - [kubectl, scale]
+      - [kubectl, rollout]
+      - [kubectl, exec]
+      - [terraform, apply]
+      - [terraform, import]
+      - [terraform, state]
+      - [helm, install]
+      - [helm, upgrade]
+      - [helm, rollback]
+      - [docker, push]
+      - [git, push]
+      - [git, reset, --hard]
+      - [git, clean]
+      - [cargo, publish]
+      - [npm, publish]
+      - [pnpm, publish]
+      - [wrangler, deploy]
+
+  - id: destructive-operations
+    effect: deny
+    commands:
+      - [kubectl, delete]
+      - [kubectl, drain]
+      - [terraform, destroy]
+      - [helm, uninstall]
+      - [git, push, --force]
+      - [git, push, -f]
+      - [git, push, --force-with-lease]
+      - [git, push, --delete]
+      - [docker, system, prune]
+      - [dropdb]
+
+audit:
+  format: json
+  redactSecrets: true
+  dir: .agentforge/audit
