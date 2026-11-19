@@ -227,7 +227,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 - [x] **T13.1** Add fuzzing of the normalizer and policy parser (`cargo-fuzz`) and run it in a scheduled CI job.
 - [~] **T13.2** *(internal red-team review done, with 4 findings fixed and regression-tested; an independent external review is still pending and is a v1.0 release blocker)* Have someone review the threat model, and add a regression test for every bypass found.
 - [x] **T13.3** Add a supply-chain workflow (`security.yml`): cargo-audit, cargo-deny, OSV, CodeQL, Dependabot.
-- [ ] **T13.4** Add a release workflow (`release.yml`). It builds binaries for macOS arm64/x64, Linux x64/arm64 and Windows x64, and produces an SBOM (CycloneDX), cosign signing and SLSA provenance. It also publishes to crates.io, after checking that the name is free.
+- [x] **T13.4** Add a release workflow (`release.yml`). It builds binaries for macOS arm64/x64, Linux x64/arm64 and Windows x64, and produces an SBOM (CycloneDX), cosign signing and SLSA provenance. It also publishes to crates.io, after checking that the name is free.
 - [ ] **T13.5** Mark the policy schema `v1`, with a migration from `v1alpha1` (`afg policy migrate`).
 - [ ] **T13.6** Run a documentation pass and set up a Homebrew tap.
 - **Gate:** run the alignment check and tag `v1.0.0`. Never claim production readiness without green isolation and bypass suites.
