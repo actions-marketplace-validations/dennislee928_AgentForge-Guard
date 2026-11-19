@@ -352,3 +352,18 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Housekeeping.** A stray, gitignored `examples/polyglot-monorepo/.agentforge/` left by a manual run was removed. `afg audit report` creates the audit directory when it opens the log; it could open it read-only instead (low priority).
   - **Release.** Version `0.2.0`, fast-forward merged to `main`, tagged `v0.2.0` locally, not pushed.
   - Next: milestone v0.3 (T10.1), on branch `milestone/v0.3`.
+- 2026-11-19 — **Phase 10 aligned, and the v0.3 gate passed.**
+  - **Gate results.** fmt and clippy pass, 167 tests pass with 0 failures, the 11 Docker tests pass, cargo-deny passes, and the demos pass.
+  - **Deviation: hybrid detectors (T10.1).** Go, Zig, Python and Mojo are data-driven profiles. Rust and Node remain code detectors, because they parse manifests (Cargo `[workspace]`, `package.json` scripts and package managers), which a static profile can't express without becoming a mini-language. The profile format supports:
+    - markers, including `*` globs;
+    - trait files;
+    - covering of child directories;
+    - a minimum-version field;
+    - `{marker}` substitution.
+  - **The safety net worked (T10.2).** The `init` consistency test caught `zig build --fetch` (T2) matching the `[zig, build]` allow prefix. `--fetch` is now in the validation rule's `denyArgs`.
+  - **Python.** `python` itself stays opaque and routes to the container. pytest, ruff and mypy are allowed as T1.
+  - **Zig version check.** T10.2 reports `minimum_zig_version` as a `min-version:` trait. Comparing it with the installed toolchain would mean running `zig`, which detection never does.
+  - **Not verified locally.** Go and Zig aren't installed here, so the Go and Zig live tests skipped locally. `examples/zig-project` has never been compiled; it targets the Zig 0.14/0.15 build API, and CI pins Zig 0.15.1. The first CI run must confirm it. The Rust live test did run.
+  - **Risk carried forward.** More `include_str!` calls reach outside the crate (`language-profiles/`). This must be resolved before `cargo publish` (T13.4).
+  - **Release.** Version `0.3.0`, fast-forward merged to `main`, tagged `v0.3.0` locally.
+  - Next: milestone v0.4 (Cloudflare). T11.2 needs the current Sandbox SDK docs. A live deployment would need a Cloudflare account, which we don't have, so T11.5's live test stays opt-in.
