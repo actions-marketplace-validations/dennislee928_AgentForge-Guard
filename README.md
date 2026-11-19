@@ -9,7 +9,7 @@
 
 > Local-first for deterministic development; sandbox-first for untrusted execution; approval-gated for infrastructure mutation.
 
-Status: **v0.2.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
+Status: **v0.3.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
 
 ## Quickstart
 
@@ -36,6 +36,8 @@ afg audit tail
 ```
 
 ## Demos
+
+Detected stacks: Go, Rust, Node.js, TypeScript and Next.js (all code detectors), plus Zig, Python and Mojo (data-driven profiles in [`language-profiles/`](language-profiles/)).
 
 1. **Polyglot repository.** In `examples/polyglot-monorepo`, `afg doctor` finds the Go API, the Rust service and the Next.js app, and shows the policy decision for each verification command.
 2. **Unsafe command prevention.** `afg run -- terraform destroy` is denied by the `destructive-operations` rule, and the audit log records argv, cwd, the policy hash and the rule.
