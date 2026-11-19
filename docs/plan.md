@@ -180,7 +180,7 @@ Working rules for execution:
 The Claude Code hook JSON contract and the Codex config keys must be verified against the current official docs when these tasks start.
 
 ### Phase 7 — Claude Code adapter (`adapters/claude/`)
-- [ ] **T7.1** Write `afg hook claude-pretool`. It reads the PreToolUse JSON from stdin, evaluates `Bash` commands with the same engine, and returns allow, deny or ask. Opaque shell strings are tokenized conservatively, and anything ambiguous returns deny or ask.
+- [x] **T7.1** Write `afg hook claude-pretool`. It reads the PreToolUse JSON from stdin, evaluates `Bash` commands with the same engine, and returns allow, deny or ask. Opaque shell strings are tokenized conservatively, and anything ambiguous returns deny or ask.
 - [ ] **T7.2** Write the PostToolUse formatter hook, which runs after an Edit or Write operation. It is documented as running after that tool operation, not as an "onSave" event.
 - [ ] **T7.3** Write `afg agents sync claude`. It generates the `.claude/settings.json` permission rules (allow/ask/deny, plus Read deny rules for protected paths) and the hook registration, and inserts a `CLAUDE.md` section between markers. The command is idempotent.
 - [ ] **T7.4** Add out-of-band approval tokens. `afg run` prints a pending decision id, and `afg approve <id>` (run by a human in another terminal) writes a signed, single-use token bound to the decision hash and argv. This closes the PTY approval gap found in Phase 5.

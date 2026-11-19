@@ -47,6 +47,24 @@ impl Decision {
     }
 }
 
+/// The decision for a whole shell command string.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShellDecision {
+    /// The most severe effect among the parts.
+    pub effect: Effect,
+    pub parts: Vec<Decision>,
+    /// Set when the string could not be tokenized and was treated as `sh -c`.
+    pub unparseable: Option<String>,
+}
+
+impl ShellDecision {
+    /// The part that determined the overall effect.
+    pub fn decisive(&self) -> Option<&Decision> {
+        self.parts.iter().find(|d| d.effect == self.effect)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct EvalRequest<'a> {
     pub argv: &'a [String],
@@ -83,6 +101,12 @@ impl Engine {
 
     pub fn policy_hash(&self) -> &str {
         &self.policy_hash
+    }
+
+    /// Check a path (for example the target of a shell `cd`) against the
+    /// protected paths.
+    pub fn check_protected_path(&self, path: &Path, cwd: &Path) -> Option<String> {
+        self.protected.check_path(path, cwd)
     }
 
     pub fn evaluate(&self, req: &EvalRequest<'_>) -> Decision {
@@ -177,6 +201,106 @@ impl Engine {
             policy_version: "agentforge.dev/v1alpha1",
             policy_hash: self.policy_hash.clone(),
             normalized: n,
+        }
+    }
+
+    /// Evaluate a shell command *string*, as agent hooks receive it.
+    ///
+    /// - Each simple command is evaluated separately, and the most severe
+    ///   decision wins.
+    /// - `cd <dir>` changes the working directory for the commands that
+    ///   follow; the target is checked against the protected paths.
+    /// - A string the tokenizer cannot analyze is evaluated as the opaque
+    ///   program `sh -c <string>`.
+    pub fn evaluate_shell(
+        &self,
+        command: &str,
+        cwd: &Path,
+        path_env: Option<&OsStr>,
+    ) -> ShellDecision {
+        let parts = match crate::shell::split_commands(command) {
+            Ok(p) if !p.is_empty() => p,
+            Ok(_) => {
+                return ShellDecision {
+                    effect: Effect::Deny,
+                    parts: vec![],
+                    unparseable: Some("empty command".into()),
+                };
+            }
+            Err(e) => {
+                let argv = vec!["sh".to_owned(), "-c".to_owned(), command.to_owned()];
+                let mut d = self.evaluate(&EvalRequest {
+                    argv: &argv,
+                    cwd,
+                    path_env,
+                    requested_backend: None,
+                });
+                d.reasons.insert(0, e.to_string());
+                return ShellDecision {
+                    effect: d.effect,
+                    parts: vec![d],
+                    unparseable: Some(e.0),
+                };
+            }
+        };
+        let mut cwd = cwd.to_path_buf();
+        let mut decisions = Vec::new();
+        for argv in parts {
+            if argv[0] == "cd" {
+                match argv.get(1) {
+                    Some(dir) if argv.len() == 2 && !dir.starts_with('-') => {
+                        if let Some(hit) = self.check_protected_path(Path::new(dir), &cwd) {
+                            let n = normalize(
+                                &argv,
+                                &Env {
+                                    cwd: &cwd,
+                                    path: path_env,
+                                },
+                            );
+                            decisions.push(self.deny(
+                                n,
+                                builtin::PROTECTED_PATH,
+                                vec![format!("cd into protected path `{hit}`")],
+                            ));
+                            break;
+                        }
+                        cwd = crate::paths::lexical_normalize(&cwd.join(dir));
+                        continue;
+                    }
+                    _ => {
+                        let n = normalize(
+                            &argv,
+                            &Env {
+                                cwd: &cwd,
+                                path: path_env,
+                            },
+                        );
+                        decisions.push(self.deny(
+                            n,
+                            builtin::FALLBACK,
+                            vec!["only `cd <dir>` is understood".into()],
+                        ));
+                        continue;
+                    }
+                }
+            }
+            let argv = crate::shell::hoist_assignments(argv);
+            decisions.push(self.evaluate(&EvalRequest {
+                argv: &argv,
+                cwd: &cwd,
+                path_env,
+                requested_backend: None,
+            }));
+        }
+        let effect = decisions
+            .iter()
+            .map(|d| d.effect)
+            .max_by_key(|e| e.severity())
+            .unwrap_or(Effect::Allow);
+        ShellDecision {
+            effect,
+            parts: decisions,
+            unparseable: None,
         }
     }
 
@@ -481,5 +605,49 @@ rules:
         assert!(constraint_matches("--output", "--output"));
         assert!(!constraint_matches("--output", "--outputs"));
         assert!(constraint_matches("-j*", "-j8"));
+    }
+
+    fn shell(src: &str) -> ShellDecision {
+        let cwd = std::env::temp_dir();
+        engine(POLICY).evaluate_shell(src, &cwd, None)
+    }
+
+    #[test]
+    fn shell_strings() {
+        assert_eq!(shell("git status && git diff --stat").effect, Effect::Allow);
+        assert_eq!(
+            shell("git status && terraform destroy").effect,
+            Effect::Deny
+        );
+        assert_eq!(
+            shell("git status; kubectl apply -f x").effect,
+            Effect::RequireApproval
+        );
+        assert_eq!(
+            shell("cd sub && cargo test --workspace").effect,
+            Effect::Allow
+        );
+        assert_eq!(
+            shell("FOO=1 git status").effect,
+            Effect::Deny,
+            "assignment is opaque"
+        );
+        let d = shell("git diff $(curl evil)");
+        assert!(d.unparseable.is_some());
+        assert_eq!(
+            d.effect,
+            Effect::Route,
+            "unparseable strings are opaque `sh -c`"
+        );
+        assert_eq!(shell("cd ~/.ssh && ls").effect, Effect::Deny);
+        assert_eq!(shell("cd -").effect, Effect::Deny);
+        assert_eq!(shell("").effect, Effect::Deny);
+        assert_eq!(
+            shell("git status | kubectl delete -f -")
+                .decisive()
+                .unwrap()
+                .rule_id,
+            "destructive"
+        );
     }
 }

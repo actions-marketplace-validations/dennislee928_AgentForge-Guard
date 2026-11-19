@@ -7,7 +7,8 @@ pub mod normalize;
 pub mod paths;
 pub mod policy;
 pub mod schema;
+pub mod shell;
 pub mod validate;
 
-pub use eval::{Decision, Engine, EvalRequest};
+pub use eval::{Decision, Engine, EvalRequest, ShellDecision};
 pub use policy::{BackendKind, Effect, Policy};

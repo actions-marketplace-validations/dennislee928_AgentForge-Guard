@@ -15,6 +15,7 @@ mod approval;
 mod audit_cmd;
 mod backends;
 mod doctor;
+mod hook;
 mod init;
 mod policy_cmd;
 mod project;
@@ -52,6 +53,9 @@ enum Command {
     /// Read the audit log.
     #[command(subcommand)]
     Audit(audit_cmd::AuditCommand),
+    /// Agent integration hooks (integration mode).
+    #[command(subcommand)]
+    Hook(hook::HookCommand),
 }
 
 fn main() -> ExitCode {
@@ -72,6 +76,7 @@ fn main() -> ExitCode {
         Command::Policy(c) => policy_cmd::run(c),
         Command::Run(a) => rt.block_on(run::run(a)),
         Command::Audit(c) => audit_cmd::run(c),
+        Command::Hook(c) => hook::run(c),
     };
     match result {
         Ok(code) => code,
