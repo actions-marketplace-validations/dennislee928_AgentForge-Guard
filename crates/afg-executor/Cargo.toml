@@ -10,8 +10,11 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+afg-core = { version = "0.1.0-alpha.0", path = "../afg-core" }
+ignore = "0.4.30"
 serde = { version = "1.0.229", features = ["derive"] }
 sha2 = "0.11.0"
+tempfile = "3.27.0"
 thiserror = "2.0.21"
 tokio = { version = "1.54.1", features = ["process", "time", "io-util", "rt", "macros", "sync", "io-std"] }
 

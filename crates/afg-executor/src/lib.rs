@@ -12,6 +12,7 @@ use serde::Serialize;
 pub mod capture;
 pub mod local;
 pub mod pin;
+pub mod snapshot;
 
 pub use local::LocalExecutor;
 pub use pin::PinnedFile;
