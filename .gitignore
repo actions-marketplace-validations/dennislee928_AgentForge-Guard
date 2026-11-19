@@ -1,1 +1,4 @@
 /.ignore
+/target
+.agentforge/audit/
+.DS_Store
