@@ -217,7 +217,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 
 ## Milestone v0.5 — Optional Native Helper & Mojo Plugin (experimental, gated)
 
-- [ ] **T12.1** Build a benchmark and profiling harness for policy evaluation and executor overhead.
+- [x] **T12.1** Build a benchmark and profiling harness for policy evaluation and executor overhead.
 - [ ] **T12.2** Build the Zig native helper (`native/zig-helper`) **only if** T12.1 or a platform feature (process telemetry, C ABI) justifies it. It is a separate optional binary and makes no policy decisions.
 - [ ] **T12.3** Build `plugins/mojo-compute` as an experimental, separately installed plugin for log and telemetry analysis. It runs through an authorized executor and gets no extra privileges.
 - **Gate:** run the alignment check. If T12.1 shows no need, record that decision in an ADR and skip T12.2/T12.3.

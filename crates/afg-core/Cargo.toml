@@ -19,3 +19,7 @@ thiserror = "2.0.21"
 
 [dev-dependencies]
 indoc = "2.0.8"
+
+[[bench]]
+name = "eval"
+harness = false
