@@ -108,6 +108,23 @@ pub fn default_detectors() -> Vec<Box<dyn Detector>> {
     ]
 }
 
+/// Everything `afg doctor` and `afg init` need to know about a repository.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Detection {
+    pub projects: Vec<Project>,
+    pub agents: Vec<agents::AgentPresence>,
+    pub risks: Vec<risks::Risk>,
+}
+
+/// Run every detector over `root`.
+pub fn detect_all(root: &Path) -> Detection {
+    Detection {
+        projects: detect_projects(root, &default_detectors()),
+        agents: agents::detect_agents(root),
+        risks: risks::detect_risks(root),
+    }
+}
+
 /// Walk `root` and run every detector in every directory.
 pub fn detect_projects(root: &Path, detectors: &[Box<dyn Detector>]) -> Vec<Project> {
     let mut out: Vec<Project> = Vec::new();

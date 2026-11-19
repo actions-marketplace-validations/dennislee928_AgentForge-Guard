@@ -123,7 +123,7 @@ Working rules for execution:
   - It marks `install` as T2, so that step runs in a container.
 - [x] **T2.4** Write the agent detector: `CLAUDE.md`, `.claude/`, `AGENTS.md`, `.codex/`.
 - [x] **T2.5** Write the risk detector, which flags committed `.env` files, a kubeconfig in the repo, terraform state, and CI scripts.
-- [ ] **T2.6** Add fixture repos under `tests/language-detection/`. They are monorepos with nested projects.
+- [x] **T2.6** Add fixture repos under `tests/language-detection/`. They are monorepos with nested projects.
 - **Gate:** run the alignment check.
 
 ### Phase 3 — Executors (`afg-executor`)
