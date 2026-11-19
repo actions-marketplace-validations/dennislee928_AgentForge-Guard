@@ -10,7 +10,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-afg-core = { version = "0.1.0-alpha.0", path = "../afg-core" }
+afg-core = { path = "../afg-core" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 toml = "1.2.1"

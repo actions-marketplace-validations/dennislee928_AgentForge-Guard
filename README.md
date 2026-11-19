@@ -9,7 +9,7 @@
 
 > Local-first for deterministic development; sandbox-first for untrusted execution; approval-gated for infrastructure mutation.
 
-Status: **v0.1.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
+Status: **v0.2.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
 
 ## Quickstart
 
@@ -62,9 +62,21 @@ argv ─► normalize ─► protected paths ─► rules ─► fallback ─►
 
 The policy format is described in [docs/policy-reference.md](docs/policy-reference.md), and the design decisions in [docs/adr/](docs/adr/).
 
+## Agent integration (Claude Code, Codex)
+
+```sh
+afg agents sync claude     # .claude/settings.json: hooks + Read/Edit/Bash deny & ask rules; CLAUDE.md section
+afg agents sync codex      # AGENTS.md section; .codex/config.toml (only if absent)
+```
+
+- **Claude Code PreToolUse hook** (`afg hook claude-pretool`): every Bash command string is evaluated by the same engine. `deny` becomes deny, `require-approval` becomes ask, and `route` becomes deny with a hint to use `afg run --`. An allowed command defers to Claude Code's own permissions. Strings afg can't analyze (`$(…)`, redirections, globs) are treated as opaque `sh -c`.
+- **PostToolUse formatter** (`afg hook claude-posttool-format`): after Claude finishes an Edit or Write tool operation, rustfmt, gofmt or prettier runs, but only if the policy allows the formatter.
+- **Out-of-band approval**: without a terminal, `afg run` prints a pending id. A human runs `afg approve <id>` in their own terminal to mint a single-use token that is bound to that exact command. `afg` refuses to run itself, so a confined agent can't approve its own request.
+- **Reports**: `afg audit report --format sarif` produces SARIF for GitHub Code Scanning, and `action.yml` is a composite GitHub Action that validates the policy and uploads the report.
+
 ## Managed mode vs. integration mode
 
-| | Managed mode: `afg run -- …` | Integration mode: agent hooks (v0.2) |
+| | Managed mode: `afg run -- …` | Integration mode: agent hooks |
 |---|---|---|
 | Who spawns the process | afg | the agent |
 | Policy enforcement | **enforced** by afg's executor | advisory; it depends on the agent's hook API |
@@ -81,6 +93,7 @@ Read these before relying on afg:
 - **Redaction is pattern-based and best effort.** Environment *values* are never recorded, and output is stored only as a length and a SHA-256.
 - **Docker isolation is only as strong as the Docker runtime and kernel.** Pin images by digest.
 - **Agents that don't use `afg` are not affected by it.** Agent-level read rules and OS sandboxes are still needed.
+- **The hook sees only what the agent sends it.** Tools other than Bash, such as file reads, are covered only by the generated Read/Edit deny rules.
 - **There is no Windows support for process-group cleanup yet.** The Cloudflare backend is planned for v0.4.
 
 ## Exit codes
