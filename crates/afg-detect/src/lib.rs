@@ -10,6 +10,7 @@ use serde::Serialize;
 pub mod agents;
 pub mod go;
 pub mod node;
+pub mod risks;
 pub mod rust;
 
 /// Trust tier of a suggested command (docs/threat-model.md).

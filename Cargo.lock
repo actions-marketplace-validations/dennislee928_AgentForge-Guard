@@ -29,6 +29,7 @@ dependencies = [
 name = "afg-detect"
 version = "0.1.0-alpha.0"
 dependencies = [
+ "afg-core",
  "serde",
  "serde_json",
  "toml",
