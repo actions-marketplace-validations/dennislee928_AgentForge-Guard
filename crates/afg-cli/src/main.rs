@@ -11,6 +11,7 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
+mod agents;
 mod approval;
 mod audit_cmd;
 mod backends;
@@ -56,6 +57,9 @@ enum Command {
     /// Agent integration hooks (integration mode).
     #[command(subcommand)]
     Hook(hook::HookCommand),
+    /// Generate coding-agent configuration from the policy.
+    #[command(subcommand)]
+    Agents(agents::AgentsCommand),
 }
 
 fn main() -> ExitCode {
@@ -77,6 +81,7 @@ fn main() -> ExitCode {
         Command::Run(a) => rt.block_on(run::run(a)),
         Command::Audit(c) => audit_cmd::run(c),
         Command::Hook(c) => rt.block_on(hook::run(c)),
+        Command::Agents(c) => agents::run(c),
     };
     match result {
         Ok(code) => code,
