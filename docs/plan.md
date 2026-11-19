@@ -128,7 +128,7 @@ Working rules for execution:
 
 ### Phase 3 — Executors (`afg-executor`)
 - [x] **T3.1** Write the `Executor` trait (`execute` and `cleanup`), along with `ExecutionRequest`, `ExecutionResult` and `ExecutionError`.
-- [ ] **T3.2** Write the local executor:
+- [x] **T3.2** Write the local executor:
   - No shell; it runs `Command::new(abs_path)`.
   - The environment is cleared, then only allowlisted variables are passed.
   - It enforces the timeout and kills the whole process group.

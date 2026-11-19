@@ -13,7 +13,10 @@ workspace = true
 serde = { version = "1.0.229", features = ["derive"] }
 sha2 = "0.11.0"
 thiserror = "2.0.21"
-tokio = { version = "1.54.1", features = ["process", "time", "io-util", "rt", "macros", "sync"] }
+tokio = { version = "1.54.1", features = ["process", "time", "io-util", "rt", "macros", "sync", "io-std"] }
 
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["rt-multi-thread"] }
+
+[target."cfg(unix)".dependencies]
+rustix = { version = "1.1.6", features = ["process"] }

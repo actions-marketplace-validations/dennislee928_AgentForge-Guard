@@ -9,8 +9,11 @@ use std::time::Duration;
 
 use serde::Serialize;
 
+pub mod capture;
+pub mod local;
 pub mod pin;
 
+pub use local::LocalExecutor;
 pub use pin::PinnedFile;
 
 /// The network access a sandboxed run gets.
@@ -125,4 +128,9 @@ pub trait Executor: Send + Sync {
 pub fn sha256_hex(digest: &[u8]) -> String {
     let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
     format!("sha256:{hex}")
+}
+
+/// Re-verify every pinned file. This is a no-op until T3.5 wires it in.
+pub(crate) fn verify_pins(_req: &ExecutionRequest) -> Result<(), ExecutionError> {
+    Ok(())
 }
