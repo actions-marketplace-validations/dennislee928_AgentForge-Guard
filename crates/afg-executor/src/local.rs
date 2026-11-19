@@ -141,4 +141,37 @@ mod tests {
         assert!(r.success());
         assert!(r.stdout.bytes.is_empty());
     }
+
+    #[tokio::test]
+    async fn modified_script_is_not_run() {
+        let dir = std::env::temp_dir().join(format!("afg-local-toctou-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let script = dir.join("check.sh");
+        let marker = dir.join("ran");
+        std::fs::write(&script, "echo safe\n").unwrap();
+        let pin = crate::PinnedFile::pin(&script).unwrap();
+        // The agent swaps the script after the decision.
+        std::fs::write(&script, format!("touch {}\n", marker.display())).unwrap();
+        let mut r = req(&["/bin/sh", script.to_str().unwrap()]);
+        r.pinned = vec![pin];
+        let e = LocalExecutor.execute(r).await.unwrap_err();
+        assert!(matches!(e, ExecutionError::Integrity(_)), "{e}");
+        assert!(!marker.exists());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[tokio::test]
+    async fn unchanged_pins_run() {
+        let dir = std::env::temp_dir().join(format!("afg-local-pinok-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let script = dir.join("ok.sh");
+        std::fs::write(&script, "echo ok\n").unwrap();
+        let mut r = req(&["/bin/sh", script.to_str().unwrap()]);
+        r.pinned = vec![
+            crate::PinnedFile::pin(&script).unwrap(),
+            crate::PinnedFile::pin(std::path::Path::new("/bin/sh")).unwrap(),
+        ];
+        assert!(LocalExecutor.execute(r).await.unwrap().success());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 }

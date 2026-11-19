@@ -134,17 +134,80 @@ pub fn sha256_hex(digest: &[u8]) -> String {
     format!("sha256:{hex}")
 }
 
-/// Re-verify every pinned file. This is a no-op until T3.5 wires it in.
-pub(crate) fn verify_pins(_req: &ExecutionRequest) -> Result<(), ExecutionError> {
+/// Re-verify every pinned file on the host, immediately before spawning.
+pub(crate) fn verify_pins(req: &ExecutionRequest) -> Result<(), ExecutionError> {
+    for p in &req.pinned {
+        p.verify()?;
+    }
     Ok(())
 }
 
-/// Re-verify pinned workspace files against their snapshot copies. This is a
-/// no-op until T3.5 wires it in.
+/// Re-verify pinned workspace files against their snapshot copies, so that
+/// the container runs exactly the content that was decided on. Pins outside
+/// the workspace (such as a host program) do not apply inside a container.
 pub(crate) fn verify_pins_in_snapshot(
-    _req: &ExecutionRequest,
-    _root: &std::path::Path,
-    _snapshot: &std::path::Path,
+    req: &ExecutionRequest,
+    root: &std::path::Path,
+    snapshot: &std::path::Path,
 ) -> Result<(), ExecutionError> {
+    for p in &req.pinned {
+        let Ok(rel) = p.path.strip_prefix(root) else {
+            continue;
+        };
+        let copy = snapshot.join(rel);
+        if !copy.exists() {
+            return Err(ExecutionError::Integrity(format!(
+                "{} is not in the snapshot (it is gitignored, protected or a symlink)",
+                rel.display()
+            )));
+        }
+        p.verify_copy(&copy)?;
+    }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn req_with(pins: Vec<PinnedFile>) -> ExecutionRequest {
+        ExecutionRequest {
+            id: "t".into(),
+            argv: vec!["sh".into()],
+            cwd: std::env::temp_dir(),
+            workspace_root: std::env::temp_dir(),
+            env: vec![],
+            timeout: Duration::from_secs(1),
+            pinned: pins,
+            stream: false,
+            capture_limit: 10,
+        }
+    }
+
+    #[test]
+    fn snapshot_pin_verification() {
+        let base = std::env::temp_dir().join(format!("afg-snappin-{}", std::process::id()));
+        let root = base.join("ws");
+        let snap = base.join("snap");
+        std::fs::create_dir_all(root.join("scripts")).unwrap();
+        std::fs::create_dir_all(snap.join("scripts")).unwrap();
+        let root = root.canonicalize().unwrap();
+        std::fs::write(root.join("scripts/a.sh"), "echo a").unwrap();
+        let pin = PinnedFile::pin(&root.join("scripts/a.sh")).unwrap();
+        let host_prog = PinnedFile::pin(std::path::Path::new("/bin/sh")).unwrap();
+        let r = req_with(vec![pin, host_prog]);
+
+        // The file is missing from the snapshot.
+        assert!(matches!(
+            verify_pins_in_snapshot(&r, &root, &snap),
+            Err(ExecutionError::Integrity(_))
+        ));
+        // The snapshot has different content.
+        std::fs::write(snap.join("scripts/a.sh"), "echo b").unwrap();
+        assert!(verify_pins_in_snapshot(&r, &root, &snap).is_err());
+        // The snapshot has the same content. The host program pin is skipped.
+        std::fs::write(snap.join("scripts/a.sh"), "echo a").unwrap();
+        verify_pins_in_snapshot(&r, &root, &snap).unwrap();
+        std::fs::remove_dir_all(&base).unwrap();
+    }
 }
