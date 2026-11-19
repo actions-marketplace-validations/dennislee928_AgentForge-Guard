@@ -1,6 +1,6 @@
 # Policy Reference: `agentforge.yaml` (`agentforge.dev/v1alpha1`)
 
-The policy is validated strictly: unknown fields are errors. Its JSON Schema is [`agentforge.schema.json`](../agentforge.schema.json) (`afg policy schema`), and `afg policy validate` checks the semantic rules. Built-in templates live in [`policies/`](../policies/).
+The policy is validated strictly: unknown fields are errors. Its JSON Schema is [`agentforge.schema.json`](../agentforge.schema.json) (`afg policy schema`), and `afg policy validate` checks the semantic rules. Built-in templates live in [`crates/afg-core/policies/`](../crates/afg-core/policies/).
 
 ```yaml
 apiVersion: agentforge.dev/v1alpha1

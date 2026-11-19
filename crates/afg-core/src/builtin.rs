@@ -1,10 +1,10 @@
-//! Built-in policies shipped with afg (`policies/*.yaml`).
+//! Built-in policies shipped with afg (`crates/afg-core/policies/*.yaml`).
 
 /// Each built-in policy's name and YAML source.
 pub const POLICIES: &[(&str, &str)] = &[
-    ("default", include_str!("../../../policies/default.yaml")),
-    ("strict", include_str!("../../../policies/strict.yaml")),
-    ("ci", include_str!("../../../policies/ci.yaml")),
+    ("default", include_str!("../policies/default.yaml")),
+    ("strict", include_str!("../policies/strict.yaml")),
+    ("ci", include_str!("../policies/ci.yaml")),
 ];
 
 /// The YAML source of a built-in policy, by name.

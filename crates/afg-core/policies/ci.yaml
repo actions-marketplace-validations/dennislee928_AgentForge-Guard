@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../agentforge.schema.json
+# yaml-language-server: $schema=../../../agentforge.schema.json
 # AgentForge Guard CI policy: non-interactive, so nothing can be approved.
 # Validation runs on the (disposable) runner, scripts run in a container, and
 # installs and infrastructure changes are denied; deploy from a separate,

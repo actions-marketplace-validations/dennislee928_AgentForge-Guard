@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../agentforge.schema.json
+# yaml-language-server: $schema=../../../agentforge.schema.json
 # AgentForge Guard default policy: local-first development, sandboxed
 # untrusted code, approval-gated infrastructure changes. Unknown commands are
 # denied.

@@ -3,31 +3,6 @@
 version = 4
 
 [[package]]
-name = "afg-cli"
-version = "0.5.0"
-dependencies = [
- "afg-core",
- "afg-detect",
- "afg-executor",
- "afg-report",
- "anyhow",
- "assert_cmd",
- "base64",
- "clap",
- "getrandom 0.4.3",
- "hmac",
- "predicates",
- "serde",
- "serde_json",
- "sha2",
- "tar",
- "tempfile",
- "thiserror",
- "tokio",
- "toml",
-]
-
-[[package]]
 name = "afg-core"
 version = "0.5.0"
 dependencies = [
@@ -82,6 +57,31 @@ dependencies = [
  "serde_json",
  "thiserror",
  "time",
+]
+
+[[package]]
+name = "agentforge-guard"
+version = "0.5.0"
+dependencies = [
+ "afg-core",
+ "afg-detect",
+ "afg-executor",
+ "afg-report",
+ "anyhow",
+ "assert_cmd",
+ "base64",
+ "clap",
+ "getrandom 0.4.3",
+ "hmac",
+ "predicates",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tar",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "toml",
 ]
 
 [[package]]

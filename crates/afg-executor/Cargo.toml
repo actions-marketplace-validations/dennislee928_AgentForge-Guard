@@ -4,13 +4,16 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-publish.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "AgentForge Guard execution backends: local, hardened Docker and Cloudflare"
 
 [lints]
 workspace = true
 
 [dependencies]
-afg-core = { path = "../afg-core" }
+afg-core = { workspace = true }
 base64 = "0.23.1"
 hmac = "0.13.0"
 ignore = "0.4.30"

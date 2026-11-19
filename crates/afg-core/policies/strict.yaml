@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../agentforge.schema.json
+# yaml-language-server: $schema=../../../agentforge.schema.json
 # AgentForge Guard strict policy: only read-only commands run locally. Builds,
 # tests and scripts run in a container with no network. Installs and
 # infrastructure changes are denied.

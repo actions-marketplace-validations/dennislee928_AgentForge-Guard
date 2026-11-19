@@ -8,7 +8,16 @@ version = "0.5.0"
 edition = "2024"
 rust-version = "1.89"
 license = "MIT OR Apache-2.0"
-publish = false
+
+repository = "https://github.com/agentforge-guard/agentforge-guard"
+keywords = ["ai-agents", "sandbox", "policy", "security", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+
+[workspace.dependencies]
+afg-core = { path = "crates/afg-core", version = "=0.5.0" }
+afg-detect = { path = "crates/afg-detect", version = "=0.5.0" }
+afg-executor = { path = "crates/afg-executor", version = "=0.5.0" }
+afg-report = { path = "crates/afg-report", version = "=0.5.0" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

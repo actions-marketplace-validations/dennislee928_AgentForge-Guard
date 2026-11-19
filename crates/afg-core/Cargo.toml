@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-publish.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "AgentForge Guard policy engine: fail-closed command normalization, protected paths and decisions"
 
 [lints]
 workspace = true

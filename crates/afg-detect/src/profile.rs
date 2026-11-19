@@ -1,4 +1,4 @@
-//! Data-driven language profiles (`language-profiles/*.yaml`).
+//! Data-driven language profiles (`crates/afg-detect/language-profiles/*.yaml`).
 //!
 //! A profile names marker files (exact names or `*` globs), optional traits
 //! (a trait is present when its file exists), whether a project covers its
@@ -47,13 +47,13 @@ pub struct ProfileCommand {
 
 /// The built-in profiles, embedded at build time.
 pub const BUILTIN: &[(&str, &str)] = &[
-    ("go", include_str!("../../../language-profiles/go.yaml")),
-    ("zig", include_str!("../../../language-profiles/zig.yaml")),
+    ("go", include_str!("../language-profiles/go.yaml")),
+    ("zig", include_str!("../language-profiles/zig.yaml")),
     (
         "python",
-        include_str!("../../../language-profiles/python.yaml"),
+        include_str!("../language-profiles/python.yaml"),
     ),
-    ("mojo", include_str!("../../../language-profiles/mojo.yaml")),
+    ("mojo", include_str!("../language-profiles/mojo.yaml")),
 ];
 
 pub fn builtin_profiles() -> Vec<Profile> {

@@ -38,7 +38,7 @@ afg audit tail
 
 ## Demos
 
-Detected stacks: Go, Rust, Node.js, TypeScript and Next.js (all code detectors), plus Zig, Python and Mojo (data-driven profiles in [`language-profiles/`](language-profiles/)).
+Detected stacks: Go, Rust, Node.js, TypeScript and Next.js (all code detectors), plus Zig, Python and Mojo (data-driven profiles in [`crates/afg-detect/language-profiles/`](crates/afg-detect/language-profiles/)).
 
 1. **Polyglot repository.** In `examples/polyglot-monorepo`, `afg doctor` finds the Go API, the Rust service and the Next.js app, and shows the policy decision for each verification command.
 2. **Unsafe command prevention.** `afg run -- terraform destroy` is denied by the `destructive-operations` rule, and the audit log records argv, cwd, the policy hash and the rule.
