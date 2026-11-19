@@ -171,7 +171,7 @@ Working rules for execution:
 - [x] **T6.2** Add CI demo jobs:
   - (a) `terraform destroy` is denied, and the job asserts the audit record.
   - (b) An untrusted script run in Docker cannot read the host's fake credentials or reach the network.
-- [ ] **T6.3** Write the README (quickstart, managed vs. integration mode, the honest limitations section) and `docs/policy-reference.md`.
+- [x] **T6.3** Write the README (quickstart, managed vs. integration mode, the honest limitations section) and `docs/policy-reference.md`.
 - [ ] **T6.4** Add `CONTRIBUTING.md`, `SECURITY.md` and the issue templates.
 - **Gate (v0.1 DoD):** fmt, clippy with `-D warnings`, and `cargo test --workspace` all pass. The deny and isolation tests pass, with isolation run on Linux CI. No secrets appear in the audit logs. The quickstart works from a clean checkout. Then run the alignment check, merge to `main`, and tag `v0.1.0` locally.
 
