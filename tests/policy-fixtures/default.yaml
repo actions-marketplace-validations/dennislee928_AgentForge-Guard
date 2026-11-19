@@ -23,6 +23,9 @@ cases:
   - { argv: [pnpm, tsc, --noEmit], expect: allow }
   - { argv: [npm, run, build], expect: allow }
   - { argv: [timeout, "60", cargo, test], expect: allow, note: wrapper unwrapped }
+  - { argv: [zig, build, test], expect: allow, rule: local-validation }
+  - { argv: [zig, version], expect: allow, rule: read-only-tools }
+  - { argv: [zig, build, --fetch], expect: deny, rule: "builtin:fallback", note: "T2 fetch is excluded from the [zig, build] allow" }
   # Constraints
   - { argv: [git, diff, --ext-diff], expect: deny, rule: "builtin:fallback" }
   - { argv: [git, log, --output=/tmp/x], expect: deny }

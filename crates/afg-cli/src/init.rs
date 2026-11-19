@@ -188,7 +188,7 @@ mod tests {
     /// allowed to run locally.
     #[test]
     fn generated_policy_is_consistent_with_detection() {
-        for fx in ["polyglot", "js-workspace", "empty"] {
+        for fx in ["polyglot", "js-workspace", "empty", "zig"] {
             let dir = fixture(fx);
             let d = detect_all(&dir);
             let yaml = generate(&dir, "default", &d).unwrap();

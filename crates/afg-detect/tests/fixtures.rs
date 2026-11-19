@@ -103,3 +103,24 @@ fn empty_repo() {
     assert!(d.agents.is_empty());
     assert!(d.risks.iter().any(|r| r.kind == "no-gitignore"));
 }
+
+#[test]
+fn zig_project_with_minimum_version() {
+    let d = detect_all(&fixture("zig"));
+    assert_eq!(d.projects.len(), 1);
+    let p = &d.projects[0];
+    assert_eq!(p.kind, StackKind::Zig);
+    assert_eq!(p.markers, ["build.zig", "build.zig.zon"]);
+    assert!(
+        p.traits.contains(&"min-version:0.15.1".to_string()),
+        "{:?}",
+        p.traits
+    );
+    let cmds: Vec<_> = p
+        .commands
+        .iter()
+        .map(|c| (c.argv.join(" "), c.tier))
+        .collect();
+    assert!(cmds.contains(&("zig build test".into(), Tier::T1)));
+    assert!(cmds.contains(&("zig build --fetch".into(), Tier::T2)));
+}

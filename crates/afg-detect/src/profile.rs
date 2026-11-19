@@ -46,7 +46,10 @@ pub struct ProfileCommand {
 }
 
 /// The built-in profiles, embedded at build time.
-pub const BUILTIN: &[(&str, &str)] = &[("go", include_str!("../../../language-profiles/go.yaml"))];
+pub const BUILTIN: &[(&str, &str)] = &[
+    ("go", include_str!("../../../language-profiles/go.yaml")),
+    ("zig", include_str!("../../../language-profiles/zig.yaml")),
+];
 
 pub fn builtin_profiles() -> Vec<Profile> {
     BUILTIN

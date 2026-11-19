@@ -196,7 +196,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 ## Milestone v0.3 — Language Profiles (Zig, data-driven detection)
 
 - [x] **T10.1** Move the hard-coded detectors to data-driven `language-profiles/*.yaml` files, which hold markers, verification commands and their tiers. The existing tests must stay green.
-- [ ] **T10.2** Add a Zig profile (`build.zig`, `build.zig.zon` → `zig build`, `zig build test`) and a Zig version check.
+- [x] **T10.2** Add a Zig profile (`build.zig`, `build.zig.zon` → `zig build`, `zig build test`) and a Zig version check.
 - [ ] **T10.3** Add a Python profile, which is needed before Mojo. `pip install` is T2.
 - [ ] **T10.4** Add a Mojo profile, covering detection and a build command only.
 - [ ] **T10.5** Add Go and Zig to the CI matrix, which un-ignores the live toolchain tests. Add `examples/zig-project`.

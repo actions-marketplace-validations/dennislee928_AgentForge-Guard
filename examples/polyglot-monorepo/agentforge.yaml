@@ -60,6 +60,8 @@ rules:
       - [go, list]
       - [go, version]
       - [go, env]
+      - [zig, version]
+      - [zig, env]
       - [kubectl, get]
       - [kubectl, describe]
       - [kubectl, logs]
@@ -86,6 +88,8 @@ rules:
       - [go, vet]
       - [go, test]
       - [gofmt]
+      - [zig, build]
+      - [zig, fmt]
       - [pnpm, lint]
       - [pnpm, test]
       - [pnpm, build]
@@ -98,7 +102,8 @@ rules:
       - [yarn, lint]
       - [yarn, test]
       - [yarn, build]
-    denyArgs: [--config*]
+    # `zig build --fetch` downloads dependencies (T2).
+    denyArgs: [--config*, --fetch]
 
   # T2: untrusted code runs in a container with no network.
   - id: isolated-scripts

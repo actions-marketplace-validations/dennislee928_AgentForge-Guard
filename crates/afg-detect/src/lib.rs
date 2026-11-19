@@ -32,6 +32,7 @@ pub enum StackKind {
     Go,
     Rust,
     Node,
+    Zig,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

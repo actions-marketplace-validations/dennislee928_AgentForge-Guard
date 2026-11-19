@@ -1,0 +1,11 @@
+# Zig projects (build.zig). `zig build` runs the project's build.zig, which
+# is arbitrary code (T1, like any build script).
+kind: zig
+markers: [build.zig, build.zig.zon]
+minVersion: { file: build.zig.zon, key: minimum_zig_version }
+commands:
+  - { tier: T0, argv: [zig, version], purpose: toolchain version }
+  - { tier: T1, argv: [zig, build], purpose: build }
+  - { tier: T1, argv: [zig, build, test], purpose: tests }
+  - { tier: T1, argv: [zig, fmt, --check, .], purpose: format check }
+  - { tier: T2, argv: [zig, build, --fetch], purpose: fetch dependencies }
