@@ -12,6 +12,7 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 
 mod approval;
+mod audit_cmd;
 mod backends;
 mod doctor;
 mod init;
@@ -48,6 +49,9 @@ enum Command {
     Policy(policy_cmd::PolicyCommand),
     /// Run a command under the policy (managed mode).
     Run(run::RunArgs),
+    /// Read the audit log.
+    #[command(subcommand)]
+    Audit(audit_cmd::AuditCommand),
 }
 
 fn main() -> ExitCode {
@@ -67,6 +71,7 @@ fn main() -> ExitCode {
         Command::Doctor(a) => rt.block_on(doctor::run(a)),
         Command::Policy(c) => policy_cmd::run(c),
         Command::Run(a) => rt.block_on(run::run(a)),
+        Command::Audit(c) => audit_cmd::run(c),
     };
     match result {
         Ok(code) => code,
