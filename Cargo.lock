@@ -32,6 +32,7 @@ name = "afg-core"
 version = "0.5.0"
 dependencies = [
  "indoc",
+ "proptest",
  "schemars",
  "serde",
  "serde_json",

@@ -1,0 +1,37 @@
+[package]
+name = "afg-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+afg-core = { path = "../crates/afg-core" }
+libfuzzer-sys = "0.4"
+
+# Standalone workspace: run with `cargo +nightly fuzz run <target>`.
+[workspace]
+
+[[bin]]
+name = "normalize_evaluate"
+path = "fuzz_targets/normalize_evaluate.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "shell_split"
+path = "fuzz_targets/shell_split.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "policy_parse"
+path = "fuzz_targets/policy_parse.rs"
+test = false
+doc = false
+bench = false

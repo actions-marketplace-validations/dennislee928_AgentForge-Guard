@@ -224,7 +224,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 
 ## Milestone v1.0 — Stable
 
-- [ ] **T13.1** Add fuzzing of the normalizer and policy parser (`cargo-fuzz`) and run it in a scheduled CI job.
+- [x] **T13.1** Add fuzzing of the normalizer and policy parser (`cargo-fuzz`) and run it in a scheduled CI job.
 - [ ] **T13.2** Have someone review the threat model, and add a regression test for every bypass found.
 - [ ] **T13.3** Add a supply-chain workflow (`security.yml`): cargo-audit, cargo-deny, OSV, CodeQL, Dependabot.
 - [ ] **T13.4** Add a release workflow (`release.yml`). It builds binaries for macOS arm64/x64, Linux x64/arm64 and Windows x64, and produces an SBOM (CycloneDX), cosign signing and SLSA provenance. It also publishes to crates.io, after checking that the name is free.
