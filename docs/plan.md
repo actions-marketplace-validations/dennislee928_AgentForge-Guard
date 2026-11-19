@@ -188,7 +188,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 - [x] **T8.1** Write `afg agents sync codex`. It inserts an `AGENTS.md` section between markers and generates recommended `.codex/config.toml` sandbox and approval settings as guidance.
 - [x] **T8.2** Check that `CLAUDE.md` and `AGENTS.md` are generated from one template, with a snapshot test.
 ### Phase 9 — Reporting & CI
-- [ ] **T9.1** Write `afg audit report --format json|sarif`. Denied and approval-gated events map to SARIF results.
+- [x] **T9.1** Write `afg audit report --format json|sarif`. Denied and approval-gated events map to SARIF results.
 - [ ] **T9.2** Build a composite GitHub Action, `action.yml`, that runs `afg doctor` and `afg policy validate` and uploads the SARIF.
 - [ ] **T9.3** Write conformance tests that check the hook decisions equal the `afg policy explain` decisions across every fixture.
 - **Gate:** run the alignment check and tag `v0.2.0`.

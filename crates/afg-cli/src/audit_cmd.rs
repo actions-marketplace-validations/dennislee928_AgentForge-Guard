@@ -21,6 +21,20 @@ pub enum AuditCommand {
     },
     /// Show one record in full, by id or unique id prefix.
     Show { id: String },
+    /// Summarize the audit log as JSON, or as SARIF 2.1.0 for code scanning.
+    Report {
+        #[arg(long, value_enum, default_value_t = ReportFormat::Json)]
+        format: ReportFormat,
+        /// Write to this file instead of stdout.
+        #[arg(long, short)]
+        output: Option<std::path::PathBuf>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, clap::ValueEnum)]
+pub enum ReportFormat {
+    Json,
+    Sarif,
 }
 
 pub fn run(cmd: AuditCommand) -> anyhow::Result<ExitCode> {
@@ -36,6 +50,26 @@ pub fn run(cmd: AuditCommand) -> anyhow::Result<ExitCode> {
                 } else {
                     println!("{}", summary(&r));
                 }
+            }
+        }
+        AuditCommand::Report { format, output } => {
+            let records = log.read_all()?;
+            let v = match format {
+                ReportFormat::Json => afg_report::sarif::summary(&records),
+                ReportFormat::Sarif => {
+                    let text = std::fs::read_to_string(&p.policy_path).unwrap_or_default();
+                    let uri = p
+                        .policy_path
+                        .strip_prefix(&p.root)
+                        .map(|r| r.display().to_string())
+                        .unwrap_or_else(|_| crate::POLICY_FILE.to_owned());
+                    afg_report::sarif::sarif(&records, &text, &uri)
+                }
+            };
+            let s = serde_json::to_string_pretty(&v)? + "\n";
+            match output {
+                Some(path) => std::fs::write(&path, s)?,
+                None => print!("{s}"),
             }
         }
         AuditCommand::Show { id } => match log.find(&id)? {
