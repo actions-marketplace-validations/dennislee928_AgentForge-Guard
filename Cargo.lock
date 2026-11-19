@@ -28,6 +28,10 @@ dependencies = [
 [[package]]
 name = "afg-detect"
 version = "0.1.0-alpha.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "afg-executor"

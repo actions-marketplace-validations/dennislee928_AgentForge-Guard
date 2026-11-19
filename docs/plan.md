@@ -115,7 +115,7 @@ Working rules for execution:
 - **Gate:** all fixtures pass. Run the alignment check.
 
 ### Phase 2 — Detection (`afg-detect`)
-- [ ] **T2.1** Write the `Detector` trait and the Go detector (`go.mod`, `go.work`), which suggests `go vet ./...` and `go test ./...`.
+- [x] **T2.1** Write the `Detector` trait and the Go detector (`go.mod`, `go.work`), which suggests `go vet ./...` and `go test ./...`.
 - [ ] **T2.2** Write the Rust detector (`Cargo.toml`, with workspaces).
 - [ ] **T2.3** Write the Node/TS/Next.js detector:
   - Inputs: `package.json`, `tsconfig.json`, `next.config.*`, and the package manager from its lockfile.
