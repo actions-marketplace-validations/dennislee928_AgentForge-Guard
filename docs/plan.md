@@ -264,3 +264,9 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Risk.** The `rg` allow rule blocks `--hidden` and `--no-ignore`, but a committed, unignored secrets file is still searchable. The T2.5 risk detector should flag that case.
   - **Fallback format.** In YAML the fallback is `deny | require-approval | { route: <backend> }`, implemented with an untagged serde representation because serde_norway uses YAML tags for enums.
   - No scope drift. Next: Phase 2 (T2.1).
+- 2026-11-19 — **Phase 2 aligned.** Gate passed: 76 tests in total, fmt, clippy and deny. Deviations and follow-ups:
+  - **Gap.** Detection and the default policy don't fully agree. Some suggested commands aren't covered by `policies/default.yaml`, so the fallback denies them: `go mod download` and `cargo fetch` (T2), `bun run <script>`, `yarn typecheck`. **T5.1 must fix this.** `afg init` should generate per-project rules from the detection results: an allow rule for each detected T0/T1 command and `require-approval` for T2 installs. It also needs a consistency test: every detected T0/T1 command is allowed by the generated policy, and no T2 command is allowed locally.
+  - **Behavior.** Node workspaces report each package separately; they don't cover their children. Cargo and `go.work` workspaces do cover their members.
+  - **Limitation.** The risk detector reports secret-like files that are *present*, not ones that are *committed*, because detection never runs `git`. The message says so.
+  - **Dependency.** `afg-detect` depends on `afg-core` only to reuse the protected-file globs. It contains no policy logic, so ADR 0002 holds.
+  - No scope drift. Next: Phase 3 (T3.1).
