@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
+pub mod agents;
 pub mod go;
 pub mod node;
 pub mod rust;
