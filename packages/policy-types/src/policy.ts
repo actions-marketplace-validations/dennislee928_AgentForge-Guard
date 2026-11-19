@@ -5,7 +5,7 @@ export type Agent = "claude-code" | "codex";
 /**
  * The policy API version that this build understands.
  */
-export type ApiVersion = "agentforge.dev/v1alpha1";
+export type ApiVersion = "agentforge.dev/v1alpha1" | "agentforge.dev/v1";
 export type SimpleFallback = "deny" | "require-approval";
 /**
  * The execution backends.

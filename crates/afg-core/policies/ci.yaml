@@ -3,7 +3,7 @@
 # Validation runs on the (disposable) runner, scripts run in a container, and
 # installs and infrastructure changes are denied; deploy from a separate,
 # human-controlled pipeline.
-apiVersion: agentforge.dev/v1alpha1
+apiVersion: agentforge.dev/v1
 kind: AgentPolicy
 
 project:

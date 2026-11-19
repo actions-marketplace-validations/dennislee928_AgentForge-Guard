@@ -20,6 +20,12 @@ pub enum PolicyCommand {
     /// Pin the current policy (run by a human after reviewing it). Later
     /// edits to the policy deny every command until it is trusted again.
     Trust,
+    /// Upgrade agentforge.yaml to the latest apiVersion (agentforge.dev/v1).
+    Migrate {
+        /// Write the file. Without this, the migrated policy is printed.
+        #[arg(long)]
+        write: bool,
+    },
 }
 
 #[derive(Debug, clap::Args)]
@@ -74,6 +80,7 @@ pub fn run(cmd: PolicyCommand) -> anyhow::Result<ExitCode> {
             );
             Ok(ExitCode::SUCCESS)
         }
+        PolicyCommand::Migrate { write } => migrate(write),
         PolicyCommand::Schema => {
             print!("{}", afg_core::schema::policy_schema_json());
             Ok(ExitCode::SUCCESS)
@@ -157,5 +164,46 @@ fn validate_cmd(a: ValidateArgs) -> anyhow::Result<ExitCode> {
         return Ok(ExitCode::from(1));
     }
     println!("{}: ok ({} warnings)", path.display(), issues.len());
+    Ok(ExitCode::SUCCESS)
+}
+
+fn migrate(write: bool) -> anyhow::Result<ExitCode> {
+    let cwd = std::env::current_dir()?.canonicalize()?;
+    let root = project::find_root(&cwd).context("no agentforge.yaml found")?;
+    let path = root.join(crate::POLICY_FILE);
+    let src = std::fs::read_to_string(&path)?;
+    let Some(new) = afg_core::policy::migrate_text(&src) else {
+        eprintln!(
+            "afg: {} is already at {}",
+            path.display(),
+            afg_core::policy::ApiVersion::LATEST.as_str()
+        );
+        return Ok(ExitCode::SUCCESS);
+    };
+    let old_policy = Policy::from_yaml(&src)?;
+    let new_policy = Policy::from_yaml(&new).context("migrated policy does not parse")?;
+    let issues = validate(&new_policy);
+    if issues.iter().any(|i| i.severity == Severity::Error) {
+        anyhow::bail!("migrated policy is invalid: {issues:?}");
+    }
+    if !write {
+        print!("{new}");
+        return Ok(ExitCode::SUCCESS);
+    }
+    std::fs::write(&path, &new)?;
+    eprintln!(
+        "afg: migrated {} to {}",
+        path.display(),
+        afg_core::policy::ApiVersion::LATEST.as_str()
+    );
+    // Re-pin only if the policy was trusted before; the change was mechanical.
+    let home = project::home_dir();
+    let old_hash = afg_core::eval::policy_hash(&old_policy);
+    if let Some(h) = home.as_deref()
+        && crate::trust::status(Some(h), &path, &old_hash) == crate::trust::Status::Trusted
+    {
+        crate::trust::pin(h, &path, &afg_core::eval::policy_hash(&new_policy))?;
+        eprintln!("  the policy was trusted, so the migrated version is trusted too");
+    }
     Ok(ExitCode::SUCCESS)
 }

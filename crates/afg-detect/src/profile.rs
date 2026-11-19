@@ -49,10 +49,7 @@ pub struct ProfileCommand {
 pub const BUILTIN: &[(&str, &str)] = &[
     ("go", include_str!("../language-profiles/go.yaml")),
     ("zig", include_str!("../language-profiles/zig.yaml")),
-    (
-        "python",
-        include_str!("../language-profiles/python.yaml"),
-    ),
+    ("python", include_str!("../language-profiles/python.yaml")),
     ("mojo", include_str!("../language-profiles/mojo.yaml")),
 ];
 

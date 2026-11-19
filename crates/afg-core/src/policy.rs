@@ -8,8 +8,43 @@ use serde::{Deserialize, Serialize};
 /// The policy API version that this build understands.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub enum ApiVersion {
+    /// Deprecated: accepted unchanged; `afg policy migrate` upgrades it.
     #[serde(rename = "agentforge.dev/v1alpha1")]
     V1Alpha1,
+    /// The stable schema. It has the same structure as v1alpha1.
+    #[serde(rename = "agentforge.dev/v1")]
+    V1,
+}
+
+impl ApiVersion {
+    pub const LATEST: ApiVersion = ApiVersion::V1;
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ApiVersion::V1Alpha1 => "agentforge.dev/v1alpha1",
+            ApiVersion::V1 => "agentforge.dev/v1",
+        }
+    }
+}
+
+/// Upgrade policy *text* to the latest apiVersion, changing only the
+/// `apiVersion:` line so that comments and layout survive. Returns `None` if
+/// the text is already current.
+pub fn migrate_text(src: &str) -> Option<String> {
+    let mut changed = false;
+    let out: Vec<String> = src
+        .lines()
+        .map(|l| {
+            let t = l.trim_start();
+            if !changed && t.starts_with("apiVersion:") && t.contains("agentforge.dev/v1alpha1") {
+                changed = true;
+                l.replacen("agentforge.dev/v1alpha1", ApiVersion::LATEST.as_str(), 1)
+            } else {
+                l.to_owned()
+            }
+        })
+        .collect();
+    changed.then(|| out.join("\n") + if src.ends_with('\n') { "\n" } else { "" })
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
@@ -512,6 +547,17 @@ mod tests {
     fn parses_reference_policy() {
         let p = Policy::from_yaml(REFERENCE).unwrap();
         assert_eq!(p.api_version, ApiVersion::V1Alpha1);
+        let migrated = migrate_text(REFERENCE).unwrap();
+        assert_eq!(
+            Policy::from_yaml(&migrated).unwrap().api_version,
+            ApiVersion::V1
+        );
+        assert_eq!(
+            migrated.lines().count(),
+            REFERENCE.lines().count(),
+            "only the version line changes"
+        );
+        assert!(migrate_text(&migrated).is_none(), "idempotent");
         assert_eq!(p.agents, vec![Agent::ClaudeCode, Agent::Codex]);
         assert_eq!(p.execution.fallback, Fallback::Deny);
         assert!(p.execution.backends.container.enabled);

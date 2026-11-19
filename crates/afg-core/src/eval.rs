@@ -198,7 +198,7 @@ impl Engine {
             backend: Some(backend),
             rule_id,
             reasons,
-            policy_version: "agentforge.dev/v1alpha1",
+            policy_version: self.policy.api_version.as_str(),
             policy_hash: self.policy_hash.clone(),
             normalized: n,
         }
@@ -310,7 +310,7 @@ impl Engine {
             backend: None,
             rule_id: rule_id.to_owned(),
             reasons,
-            policy_version: "agentforge.dev/v1alpha1",
+            policy_version: self.policy.api_version.as_str(),
             policy_hash: self.policy_hash.clone(),
             normalized: n,
         }

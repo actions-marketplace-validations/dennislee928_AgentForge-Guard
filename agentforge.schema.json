@@ -101,9 +101,17 @@
     },
     "ApiVersion": {
       "description": "The policy API version that this build understands.",
-      "type": "string",
-      "enum": [
-        "agentforge.dev/v1alpha1"
+      "oneOf": [
+        {
+          "description": "Deprecated: accepted unchanged; `afg policy migrate` upgrades it.",
+          "type": "string",
+          "const": "agentforge.dev/v1alpha1"
+        },
+        {
+          "description": "The stable schema. It has the same structure as v1alpha1.",
+          "type": "string",
+          "const": "agentforge.dev/v1"
+        }
       ]
     },
     "Audit": {

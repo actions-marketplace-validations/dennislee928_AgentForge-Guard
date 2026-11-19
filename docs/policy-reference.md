@@ -1,9 +1,11 @@
-# Policy Reference: `agentforge.yaml` (`agentforge.dev/v1alpha1`)
+# Policy Reference: `agentforge.yaml` (`agentforge.dev/v1`)
+
+`agentforge.dev/v1alpha1` is still accepted, with a deprecation warning; `afg policy migrate --write` upgrades it. Only the `apiVersion` line changes, and a trusted policy stays trusted.
 
 The policy is validated strictly: unknown fields are errors. Its JSON Schema is [`agentforge.schema.json`](../agentforge.schema.json) (`afg policy schema`), and `afg policy validate` checks the semantic rules. Built-in templates live in [`crates/afg-core/policies/`](../crates/afg-core/policies/).
 
 ```yaml
-apiVersion: agentforge.dev/v1alpha1
+apiVersion: agentforge.dev/v1
 kind: AgentPolicy
 project: { name: my-project, root: "." }
 agents: [claude-code, codex]

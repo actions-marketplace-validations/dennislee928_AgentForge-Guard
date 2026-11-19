@@ -2,7 +2,7 @@
 # AgentForge Guard default policy: local-first development, sandboxed
 # untrusted code, approval-gated infrastructure changes. Unknown commands are
 # denied.
-apiVersion: agentforge.dev/v1alpha1
+apiVersion: agentforge.dev/v1
 kind: AgentPolicy
 
 project:

@@ -671,3 +671,38 @@ fn edited_policy_is_untrusted_until_a_human_re_trusts_it() {
     with_home(&["policy", "trust"]).assert().success();
     with_home(&["run", "--", "ls"]).assert().success();
 }
+
+#[test]
+fn migrate_v1alpha1_keeps_trust() {
+    let r = Repo::polyglot();
+    let old = "# my comment\napiVersion: agentforge.dev/v1alpha1\nkind: AgentPolicy\nproject: { name: m }\nrules: [{ id: a, effect: allow, commands: [[ls]] }]\n";
+    std::fs::write(r.root.join("agentforge.yaml"), old).unwrap();
+    let with_home = |args: &[&str]| {
+        let mut c = r.afg();
+        c.env("HOME", r.home()).args(args);
+        c
+    };
+    with_home(&["policy", "validate"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("deprecated"));
+    with_home(&["policy", "trust"]).assert().success();
+    with_home(&["policy", "migrate"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("apiVersion: agentforge.dev/v1\n"));
+    with_home(&["policy", "migrate", "--write"])
+        .assert()
+        .success();
+    let new = std::fs::read_to_string(r.root.join("agentforge.yaml")).unwrap();
+    assert_eq!(
+        new,
+        old.replace("v1alpha1", "v1"),
+        "only the version line changes"
+    );
+    with_home(&["run", "--", "ls"]).assert().success();
+    with_home(&["policy", "migrate", "--write"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("already"));
+}

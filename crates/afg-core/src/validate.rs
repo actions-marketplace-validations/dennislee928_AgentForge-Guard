@@ -94,6 +94,12 @@ impl Validator {
     }
 
     fn run(&mut self, p: &Policy) {
+        if p.api_version == crate::policy::ApiVersion::V1Alpha1 {
+            self.warn(
+                "apiVersion",
+                "agentforge.dev/v1alpha1 is deprecated; run `afg policy migrate`",
+            );
+        }
         if p.project.name.trim().is_empty() {
             self.err("project.name", "must not be empty");
         }
