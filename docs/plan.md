@@ -331,3 +331,15 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **T7.4 approval tokens.** This task was added during the Phase 5 alignment. `afg` refusing to run itself is now a built-in forbidden rule, and `~/.config/agentforge` is a built-in protected path. The residual risk (an agent unconfined by afg) is documented.
   - **Open.** The CLI-level multicall regression test from the Phase 6 follow-up is still pending; it moves to T9.3.
   - Next: Phase 8 (T8.1). The Codex config keys must be verified against the official docs first.
+- 2026-11-19 — **Phase 8 aligned.** Gate passed: fmt, clippy, all tests and deny. The Codex config keys were verified against the current Codex config reference (now hosted at learn.chatgpt.com):
+  - `sandbox_mode` takes `read-only`, `workspace-write` or `danger-full-access`.
+  - `approval_policy` takes `on-request` or `never`. `untrusted` is unsupported and `on-failure` is deprecated.
+  - The `[sandbox_workspace_write]` table has `network_access`.
+  - The `[shell_environment_policy]` table has `inherit = core` and `ignore_default_excludes = false`, which drops KEY/SECRET/TOKEN variables.
+  - Project `.codex/config.toml` files are read only for trusted projects.
+
+  Deviations:
+  - The Codex config is written only when it is absent. An existing config is never rewritten; the differing keys are reported. This respects user ownership of Codex settings.
+  - T8.2 also enforces the Phase 0 note: this repo's own `CLAUDE.md` and `AGENTS.md` must share one body.
+
+  Next: Phase 9 (T9.1).
