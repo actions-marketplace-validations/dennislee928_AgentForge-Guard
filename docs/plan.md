@@ -285,3 +285,9 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Open item.** The image is a mutable tag (`debian:stable-slim`) and is pulled when missing. Recommend pinning a digest (`image@sha256:…`) in `docs/policy-reference.md` (T6.3), and consider a `pull: never` option in v0.2.
   - **Open item.** The CLI (T5.4) must map policy settings onto executor requests: the env allowlist from `backends.*.env`, the timeout and the limits. It must also pin the program and script arguments when the decision is made, via `pin::pin_request_files`.
   - No scope drift. Next: Phase 4 (T4.1).
+- 2026-11-19 — **Phase 4 aligned.** Gate passed: 116 tests, including proptest-based redaction properties, plus 10 ignored Docker tests. Deviations and notes:
+  - **MSRV.** Raised to Rust 1.89 for `std::fs::File::lock` (cross-process locking with no extra dependency).
+  - **Audit records.** Records store output *digests* (length, SHA-256, truncation), never output bytes. `afg audit` therefore cannot replay output, which is deliberate: it removes a whole class of leaks.
+  - **Redaction is applied in `AuditLog::append`**, so callers can't forget it. It also scrubs reasons and errors, since they may quote argv values.
+  - **Limitation.** Redaction is pattern-based and best effort. Environment values are never recorded, and this must be stated in `docs/security-boundaries.md` (T6.3).
+  - No scope drift. Next: Phase 5 (T5.1). T5.1 must also close the Phase 2 detection/policy gap.
