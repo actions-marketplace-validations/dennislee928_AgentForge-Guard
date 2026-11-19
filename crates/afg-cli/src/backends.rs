@@ -50,3 +50,12 @@ pub fn docker_executor(
     };
     Ok(DockerExecutor::new(cfg)?)
 }
+
+/// Values for the allowlisted variables that are set on the host. Nothing
+/// else is passed to the child.
+pub fn host_env(names: &[String]) -> Vec<(String, String)> {
+    names
+        .iter()
+        .filter_map(|k| std::env::var(k).ok().map(|v| (k.clone(), v)))
+        .collect()
+}

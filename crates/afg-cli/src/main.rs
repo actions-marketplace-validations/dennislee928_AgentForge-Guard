@@ -11,11 +11,13 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
+mod approval;
 mod backends;
 mod doctor;
 mod init;
 mod policy_cmd;
 mod project;
+mod run;
 
 pub const POLICY_FILE: &str = "agentforge.yaml";
 
@@ -44,6 +46,8 @@ enum Command {
     /// Explain decisions, validate a policy or print its schema.
     #[command(subcommand)]
     Policy(policy_cmd::PolicyCommand),
+    /// Run a command under the policy (managed mode).
+    Run(run::RunArgs),
 }
 
 fn main() -> ExitCode {
@@ -62,6 +66,7 @@ fn main() -> ExitCode {
         Command::Init(a) => init::run(a),
         Command::Doctor(a) => rt.block_on(doctor::run(a)),
         Command::Policy(c) => policy_cmd::run(c),
+        Command::Run(a) => rt.block_on(run::run(a)),
     };
     match result {
         Ok(code) => code,
