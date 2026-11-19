@@ -161,7 +161,7 @@ Working rules for execution:
 - [x] **T5.2** Write `afg doctor`: the detected stacks and agents, risks, backend availability, and validation of the policy. It supports `--json`.
 - [x] **T5.3** Write `afg policy explain -- <argv>` (decision, matched rule, reasons) and `afg policy validate`.
 - [x] **T5.4** Write `afg run [--isolation local|container] -- <argv>`. It goes evaluate → approval → route → execute → audit. Its exit code passes through, and denials use exit code 126.
-- [ ] **T5.5** Write the approval flow. It prompts on `/dev/tty` with the exact argv, cwd and backend. With no TTY, the command is denied. It never reads the approval from stdin.
+- [x] **T5.5** Write the approval flow. It prompts on `/dev/tty` with the exact argv, cwd and backend. With no TTY, the command is denied. It never reads the approval from stdin.
 - [ ] **T5.6** Write `afg audit tail` and `afg audit show <id>`.
 - [ ] **T5.7** Write CLI integration tests with `assert_cmd`. They cover the full flow `init → doctor → run → audit` on a temp repo.
 - **Gate:** run the alignment check.
