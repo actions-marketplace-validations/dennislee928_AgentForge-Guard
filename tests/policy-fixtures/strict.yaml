@@ -1,0 +1,13 @@
+# Expected decisions for policies/strict.yaml.
+policy: builtin:strict
+cases:
+  - { argv: [git, status], expect: allow, backend: local }
+  - { argv: [rg, foo], expect: allow, backend: local }
+  - { argv: [cargo, test], expect: route, backend: container }
+  - { argv: [go, test, ./...], expect: route, backend: container }
+  - { argv: [bash, x.sh], expect: route, backend: container }
+  - { argv: [kubectl, get, pods], expect: deny, note: kubectl not allowed in strict }
+  - { argv: [pnpm, install], expect: deny, rule: dependency-install }
+  - { argv: [kubectl, apply, -f, x], expect: deny, rule: infra-changes }
+  - { argv: [git, push], expect: deny }
+  - { argv: [terraform, destroy], expect: deny, rule: destructive-operations }

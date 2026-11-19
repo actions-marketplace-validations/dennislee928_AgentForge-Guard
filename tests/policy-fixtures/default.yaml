@@ -1,0 +1,65 @@
+# Expected decisions for policies/default.yaml.
+policy: builtin:default
+cases:
+  # T0: read-only
+  - { argv: [git, status], expect: allow, backend: local, rule: read-only-git }
+  - { argv: [git, diff, --stat], expect: allow, backend: local }
+  - { argv: [git, --no-pager, log, --oneline, -n, "5"], expect: allow }
+  - { argv: [git, -C, sub, status], expect: allow }
+  - { argv: [ls, -la], expect: allow }
+  - { argv: [cat, src/main.rs], expect: allow }
+  - { argv: [cargo, metadata, --format-version, "1"], expect: allow }
+  - { argv: [go, list, ./...], expect: allow }
+  - { argv: [kubectl, get, pods, -n, dev], expect: allow }
+  - { argv: [kubectl, logs, deploy/api], expect: allow }
+  - { argv: [rg, TODO, src], expect: allow, rule: ripgrep }
+  # T1: local validation
+  - { argv: [cargo, check, --workspace], expect: allow, rule: local-validation }
+  - { argv: [cargo, clippy, --all-targets, --, -D, warnings], expect: allow }
+  - { argv: [cargo, test], expect: allow }
+  - { argv: [go, test, ./...], expect: allow }
+  - { argv: [go, vet, ./...], expect: allow }
+  - { argv: [pnpm, lint], expect: allow }
+  - { argv: [pnpm, tsc, --noEmit], expect: allow }
+  - { argv: [npm, run, build], expect: allow }
+  - { argv: [timeout, "60", cargo, test], expect: allow, note: wrapper unwrapped }
+  # Constraints
+  - { argv: [git, diff, --ext-diff], expect: deny, rule: "builtin:fallback" }
+  - { argv: [git, log, --output=/tmp/x], expect: deny }
+  - { argv: [rg, --pre, ./x.sh, pat], expect: deny }
+  - { argv: [rg, --hidden, password], expect: deny }
+  - { argv: [rg, -uuu, password], expect: deny }
+  - { argv: [cargo, test, --config, "target.x.runner='sh'"], expect: deny }
+  # T2: routed to a container
+  - { argv: [bash, ./scripts/check.sh], expect: route, backend: container, rule: isolated-scripts }
+  - { argv: [sh, -c, "echo hi"], expect: route, backend: container }
+  - { argv: [python3, tools/gen.py], expect: route, backend: container }
+  - { argv: [make, test], expect: route, backend: container }
+  # Requested isolation
+  - { argv: [cargo, test], requested: container, expect: allow, backend: container }
+  - { argv: [bash, x.sh], requested: local, expect: route, backend: container }
+  # Installs: human approval
+  - { argv: [pnpm, install], expect: require-approval, backend: local, rule: dependency-install }
+  - { argv: [npm, ci], expect: require-approval }
+  - { argv: [pip, install, requests], expect: require-approval }
+  # T3: approval
+  - { argv: [kubectl, apply, -f, k8s/], expect: require-approval, rule: infra-changes }
+  - { argv: [terraform, apply], expect: require-approval }
+  - { argv: [docker, push, ghcr.io/x/y:1], expect: require-approval }
+  - { argv: [git, push, origin, main], expect: require-approval }
+  - { argv: [git, reset, --hard, HEAD~3], expect: require-approval }
+  - { argv: [wrangler, deploy], expect: require-approval }
+  # T3: denied
+  - { argv: [terraform, destroy], expect: deny, rule: destructive-operations }
+  - { argv: [terraform, -chdir=infra, destroy, -auto-approve], expect: deny, rule: destructive-operations }
+  - { argv: [kubectl, delete, ns, prod], expect: deny, rule: destructive-operations }
+  - { argv: [kubectl, --context, prod, -n, x, delete, pod, y], expect: deny, rule: destructive-operations }
+  - { argv: [git, push, --force, origin, main], expect: deny }
+  - { argv: [git, push, origin, main, -f], expect: deny }
+  - { argv: [helm, uninstall, api], expect: deny }
+  - { argv: [docker, system, prune, -af], expect: deny }
+  # Unknown: fail closed
+  - { argv: [curl, https://example.com], expect: deny, rule: "builtin:fallback" }
+  - { argv: [rm, -rf, build], expect: deny }
+  - { argv: [psql, -c, DROP DATABASE prod], expect: deny }
+  - { argv: [unknown-tool], expect: deny }

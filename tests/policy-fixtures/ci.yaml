@@ -1,0 +1,10 @@
+# Expected decisions for policies/ci.yaml.
+policy: builtin:ci
+cases:
+  - { argv: [cargo, test, --workspace], expect: allow, backend: local }
+  - { argv: [go, test, ./...], expect: allow }
+  - { argv: [sh, ./ci/check.sh], expect: route, backend: container }
+  - { argv: [npm, ci], expect: deny, rule: dependency-install }
+  - { argv: [terraform, apply], expect: deny, rule: infra-changes }
+  - { argv: [git, push], expect: deny }
+  - { argv: [kubectl, delete, pod, x], expect: deny, rule: destructive-operations }

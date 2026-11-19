@@ -102,7 +102,7 @@ Working rules for execution:
 - [x] **T1.5** Write the protected-path checker, which uses canonicalization and resolves symlinks.
 - [x] **T1.6** Write the evaluator, covering precedence, fallback and the `Decision` reasons.
 - [x] **T1.7** Ship the built-in `policies/default.yaml`, `strict.yaml` and `ci.yaml`.
-- [ ] **T1.8** Add the fixture suite `tests/policy-fixtures/*.yaml`, as triples of (policy, argv, expected decision), plus a table-driven runner. Future adapters must also pass these as conformance tests.
+- [x] **T1.8** Add the fixture suite `tests/policy-fixtures/*.yaml`, as triples of (policy, argv, expected decision), plus a table-driven runner. Future adapters must also pass these as conformance tests.
 - [ ] **T1.9** Write the adversarial suite `tests/adversarial/`. It covers:
   - `bash -c`, `env sh`, nested shells.
   - `$(…)` and backtick substitution inside args.

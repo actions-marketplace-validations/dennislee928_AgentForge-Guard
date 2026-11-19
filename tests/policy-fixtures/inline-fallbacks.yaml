@@ -1,0 +1,17 @@
+# Fallback behavior with an inline policy.
+policy: |
+  apiVersion: agentforge.dev/v1alpha1
+  kind: AgentPolicy
+  project: { name: fallbacks }
+  execution:
+    fallback: { route: container }
+    backends: { container: { enabled: true } }
+  rules:
+    - { id: ok, effect: allow, commands: [[git, status]] }
+    - { id: no, effect: deny, commands: [[terraform, destroy]] }
+cases:
+  - { argv: [git, status], expect: allow, backend: local, rule: ok }
+  - { argv: [curl, x], expect: route, backend: container, rule: "builtin:fallback" }
+  - { argv: [bash, -c, "terraform destroy"], expect: route, backend: container, note: opaque goes to fallback }
+  - { argv: [terraform, destroy], expect: deny, rule: no }
+  - { argv: [sudo, git, status], expect: deny, rule: "builtin:forbidden" }
