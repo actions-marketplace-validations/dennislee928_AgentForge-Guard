@@ -255,3 +255,12 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - `CLAUDE.md` and `AGENTS.md` share one body by hand for now. T8.2 replaces this with a generated template and a snapshot test.
   - CI runs `--ignored` (Docker isolation) tests on Linux only, which matches the T3.6 / v0.1 gate.
   - No scope drift. Next: Phase 1 (T1.1).
+- 2026-11-19 — **Phase 1 aligned.** Gate passed: 58 tests, including 54 policy fixtures, 69 adversarial cases and a meta-test. Deviations and additions:
+  - **Added modules.** `afg_core::builtin` embeds `policies/*.yaml`. `afg_core::conformance` holds the fixture types and is reused by the v0.2 hook conformance work (T9.3).
+  - **Matching semantics.** `deny` and `require-approval` rules match their tail as an *ordered subsequence*, so interleaved flags cannot evade them (`kubectl -n prod delete`). `allow` and `route` rules need an exact prefix and support `denyArgs`/`allowFlags`. The validator rejects constraints on deny and approval rules, because constraints would weaken them. This needs documenting in `docs/policy-reference.md` (T6.3).
+  - **Opacity.** Interpreters (python, node, ...) are always opaque, so `allow` never applies to them, and the validator warns about such rules. Routing them to a container is the supported path.
+  - **Default policy.** Dependency installs are `require-approval` rather than routed to a container: the container defaults to `network: none`, so installs would always fail there. `strict` and `ci` deny installs.
+  - **Risk.** `include_str!` reaches outside the crate (`../../../policies`), which blocks `cargo publish`. Before T13.4, move the policies into the crate or copy them in `build.rs`.
+  - **Risk.** The `rg` allow rule blocks `--hidden` and `--no-ignore`, but a committed, unignored secrets file is still searchable. The T2.5 risk detector should flag that case.
+  - **Fallback format.** In YAML the fallback is `deny | require-approval | { route: <backend> }`, implemented with an untagged serde representation because serde_norway uses YAML tags for enums.
+  - No scope drift. Next: Phase 2 (T2.1).
