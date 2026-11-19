@@ -147,7 +147,7 @@ Working rules for execution:
 
 ### Phase 4 — Audit & redaction (`afg-report`)
 - [x] **T4.1** Write the audit record type and the JSONL writer, which uses append mode and file locking.
-- [ ] **T4.2** Write the redactor. It removes env values and scrubs these patterns:
+- [x] **T4.2** Write the redactor. It removes env values and scrubs these patterns:
   - AWS, GitHub and Slack tokens.
   - JWTs.
   - PEM blocks.
