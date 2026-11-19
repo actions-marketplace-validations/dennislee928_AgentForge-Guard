@@ -168,7 +168,7 @@ Working rules for execution:
 
 ### Phase 6 — Examples, docs, release gate
 - [x] **T6.1** Build `examples/polyglot-monorepo`: a Go API, a Rust service and a Next.js app, plus a committed sample `agentforge.yaml`.
-- [ ] **T6.2** Add CI demo jobs:
+- [x] **T6.2** Add CI demo jobs:
   - (a) `terraform destroy` is denied, and the job asserts the audit record.
   - (b) An untrusted script run in Docker cannot read the host's fake credentials or reach the network.
 - [ ] **T6.3** Write the README (quickstart, managed vs. integration mode, the honest limitations section) and `docs/policy-reference.md`.

@@ -38,9 +38,23 @@ jobs:
       - name: Docker isolation tests (Linux reference runner)
         if: runner.os == 'Linux'
         run: cargo test --workspace -- --ignored
+        env:
+          AFG_NO_TTY: "1"
 
   deny:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v2
+
+  demos:
+    # README demos 2 and 3 on the Linux reference runner (disposable VM).
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build -p afg-cli
+      - run: docker pull debian:stable-slim
+      - run: scripts/ci-demos.sh target/debug/afg
