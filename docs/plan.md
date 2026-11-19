@@ -136,7 +136,7 @@ Working rules for execution:
 - [x] **T3.3** Write the snapshot builder: it builds a manifest from git-tracked files minus protected patterns, copies them to a temp dir, and records the manifest hash.
 - [x] **T3.4** Write the Docker executor, which builds the argv as specified in Architecture and checks that Docker is available.
 - [x] **T3.5** Add TOCTOU re-verification: script hashes and executable identity are re-checked immediately before spawning.
-- [ ] **T3.6** Write isolation tests in `tests/sandbox-isolation/`. Each one is `#[ignore]` unless Docker is present.
+- [x] **T3.6** Write isolation tests in `tests/sandbox-isolation/`. Each one is `#[ignore]` unless Docker is present.
   - A fake host `.env` and a fake `~/.ssh` key are unreadable from inside the container.
   - Network egress fails.
   - Writing to the root filesystem fails.
