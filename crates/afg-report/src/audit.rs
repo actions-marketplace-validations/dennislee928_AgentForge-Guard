@@ -249,6 +249,25 @@ impl AuditLog {
         Ok(all.into_iter().skip(skip).collect())
     }
 
+    /// The number of executed records on `backend` within the last `window`.
+    /// Used for the Cloudflare per-hour run cap (T11.4).
+    pub fn executions_since(
+        &self,
+        backend: BackendKind,
+        window: std::time::Duration,
+    ) -> Result<usize, AuditError> {
+        let cutoff = time::OffsetDateTime::now_utc() - window;
+        let fmt = &time::format_description::well_known::Rfc3339;
+        Ok(self
+            .read_all()?
+            .iter()
+            .filter(|r| {
+                r.decision.backend == Some(backend) && (r.execution.is_some() || r.error.is_some())
+            })
+            .filter(|r| time::OffsetDateTime::parse(&r.timestamp, fmt).is_ok_and(|t| t >= cutoff))
+            .count())
+    }
+
     /// Find a record by id, or by a unique id prefix.
     pub fn find(&self, id: &str) -> Result<Option<AuditRecord>, AuditError> {
         let matches: Vec<_> = self
@@ -352,6 +371,34 @@ mod tests {
             }
         });
         assert_eq!(log.read_all().unwrap().len(), 400, "every line parses");
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[test]
+    fn counts_recent_executions_per_backend() {
+        let d = dir("count");
+        let log = AuditLog::open(&d, false).unwrap();
+        let mut rec = AuditRecord::from_decision(
+            new_id(),
+            "run",
+            Path::new("/w"),
+            &decision(&["bash", "x.sh"]),
+        );
+        rec.error = Some("boom".into());
+        log.append(&rec).unwrap();
+        log.append(&rec).unwrap();
+        let mut old = rec.clone();
+        old.timestamp = "2020-01-01T00:00:00Z".into();
+        log.append(&old).unwrap();
+        let hour = std::time::Duration::from_secs(3600);
+        assert_eq!(
+            log.executions_since(BackendKind::Container, hour).unwrap(),
+            2
+        );
+        assert_eq!(
+            log.executions_since(BackendKind::Cloudflare, hour).unwrap(),
+            0
+        );
         std::fs::remove_dir_all(&d).unwrap();
     }
 

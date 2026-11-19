@@ -207,7 +207,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 - [x] **T11.1** Add the pnpm workspace and `packages/policy-types`, which generates TS types from `agentforge.schema.json`. CI fails if the generated types drift from the schema.
 - [x] **T11.2** Write `packages/cloudflare-adapter`, a Worker plus Sandbox SDK. Pin the SDK major version after re-reading the current docs. It exposes an authenticated execute endpoint that accepts only pre-approved `ExecutionRequest`s, signed by the CLI with a per-project key. It makes no policy decisions itself.
 - [x] **T11.3** Write the Rust `CloudflareExecutor`. It uploads the manifest-filtered snapshot, runs the command, downloads the result, and cleans up the session.
-- [ ] **T11.4** Add lifecycle controls: session TTL, cost and timeout caps, and guaranteed cleanup when a run fails.
+- [x] **T11.4** Add lifecycle controls: session TTL, cost and timeout caps, and guaranteed cleanup when a run fails.
 - [ ] **T11.5** Add tests:
   - A mocked Worker that checks the contract.
   - An opt-in live test that needs `CF_*` env vars.

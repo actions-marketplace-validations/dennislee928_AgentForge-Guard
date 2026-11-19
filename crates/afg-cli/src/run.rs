@@ -202,9 +202,21 @@ async fn execute(
             Ok(docker.execute(req).await?)
         }
         BackendKind::Cloudflare => {
+            let c = &policy.execution.backends.cloudflare;
+            // Cost cap: enforced before anything is uploaded (T11.4).
+            let log = AuditLog::open(&p.root.join(&policy.audit.dir), policy.audit.redact_secrets)
+                .map_err(|e| RunError::Setup(e.into()))?;
+            let recent = log
+                .executions_since(BackendKind::Cloudflare, Duration::from_secs(3600))
+                .map_err(|e| RunError::Setup(e.into()))?;
+            if recent as u64 >= c.max_runs_per_hour {
+                return Err(RunError::Exec(ExecutionError::Unavailable(format!(
+                    "cloudflare cost cap reached: {recent} runs in the last hour (maxRunsPerHour {})",
+                    c.max_runs_per_hour
+                ))));
+            }
             let cf = cloudflare_executor(policy, &p.root, home_dir().as_deref())
                 .map_err(RunError::Setup)?;
-            let c = &policy.execution.backends.cloudflare;
             let req = ExecutionRequest {
                 id: id.to_owned(),
                 argv: n.inner_argv.clone(),
