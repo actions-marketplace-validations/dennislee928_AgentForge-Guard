@@ -167,7 +167,7 @@ Working rules for execution:
 - **Gate:** run the alignment check.
 
 ### Phase 6 — Examples, docs, release gate
-- [ ] **T6.1** Build `examples/polyglot-monorepo`: a Go API, a Rust service and a Next.js app, plus a committed sample `agentforge.yaml`.
+- [x] **T6.1** Build `examples/polyglot-monorepo`: a Go API, a Rust service and a Next.js app, plus a committed sample `agentforge.yaml`.
 - [ ] **T6.2** Add CI demo jobs:
   - (a) `terraform destroy` is denied, and the job asserts the audit record.
   - (b) An untrusted script run in Docker cannot read the host's fake credentials or reach the network.

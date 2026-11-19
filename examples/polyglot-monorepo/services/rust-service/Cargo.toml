@@ -1,0 +1,8 @@
+[package]
+name = "rust-service"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# A standalone workspace, so it is not mistaken for a member of the afg repository.
+[workspace]

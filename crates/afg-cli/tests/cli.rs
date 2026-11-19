@@ -300,3 +300,23 @@ fn untrusted_script_runs_in_container_without_host_secrets_or_network() {
             .contains("snapshotManifest")
     );
 }
+
+#[test]
+fn example_policy_matches_init_output() {
+    let example = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/polyglot-monorepo")
+        .canonicalize()
+        .unwrap();
+    let out = Command::cargo_bin("afg")
+        .unwrap()
+        .args(["init", "--dry-run", "--dir"])
+        .arg(&example)
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    let committed = std::fs::read_to_string(example.join("agentforge.yaml")).unwrap();
+    assert!(
+        String::from_utf8(out.stdout).unwrap() == committed,
+        "examples/polyglot-monorepo/agentforge.yaml is stale; regenerate it with `afg init --force --dir examples/polyglot-monorepo`"
+    );
+}

@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+.agentforge/
+target/
+node_modules/
+.next/
