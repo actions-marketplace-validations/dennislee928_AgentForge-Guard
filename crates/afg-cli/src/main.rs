@@ -76,7 +76,7 @@ fn main() -> ExitCode {
         Command::Policy(c) => policy_cmd::run(c),
         Command::Run(a) => rt.block_on(run::run(a)),
         Command::Audit(c) => audit_cmd::run(c),
-        Command::Hook(c) => hook::run(c),
+        Command::Hook(c) => rt.block_on(hook::run(c)),
     };
     match result {
         Ok(code) => code,

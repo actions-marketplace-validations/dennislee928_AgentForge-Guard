@@ -37,6 +37,8 @@ pub enum HookCommand {
         #[arg(long, value_enum, default_value_t = AllowMode::Defer)]
         allow_mode: AllowMode,
     },
+    /// The Claude Code PostToolUse hook: format files after Edit/Write.
+    ClaudePosttoolFormat,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
@@ -57,8 +59,15 @@ struct HookInput {
     cwd: Option<String>,
 }
 
-pub fn run(cmd: HookCommand) -> anyhow::Result<ExitCode> {
-    let HookCommand::ClaudePretool { allow_mode } = cmd;
+pub async fn run(cmd: HookCommand) -> anyhow::Result<ExitCode> {
+    let allow_mode = match cmd {
+        HookCommand::ClaudePretool { allow_mode } => allow_mode,
+        HookCommand::ClaudePosttoolFormat => {
+            let mut buf = String::new();
+            let _ = std::io::stdin().take(MAX_INPUT).read_to_string(&mut buf);
+            return Ok(posttool_format(&buf).await);
+        }
+    };
     let mut buf = String::new();
     if std::io::stdin()
         .take(MAX_INPUT)
@@ -147,4 +156,112 @@ fn emit(decision: &str, reason: &str) {
         }
     });
     println!("{out}");
+}
+
+/// The formatter argv for a file, chosen by extension. `None` means the
+/// file type has no built-in formatter.
+pub fn formatter_for(path: &std::path::Path) -> Option<Vec<String>> {
+    let ext = path.extension()?.to_str()?.to_ascii_lowercase();
+    let file = path.to_string_lossy().into_owned();
+    let argv: Vec<&str> = match ext.as_str() {
+        "rs" => vec!["rustfmt", "--edition", "2024"],
+        "go" => vec!["gofmt", "-w"],
+        "ts" | "tsx" | "js" | "jsx" | "mjs" | "cjs" | "css" | "scss" | "json" | "md" | "yaml"
+        | "yml" => {
+            vec!["pnpm", "prettier", "--write"]
+        }
+        _ => return None,
+    };
+    Some(
+        argv.into_iter()
+            .map(String::from)
+            .chain(std::iter::once(file))
+            .collect(),
+    )
+}
+
+/// `afg hook claude-posttool-format`: run after Claude Code finishes an
+/// Edit or Write tool operation (not an editor "on save" event). The
+/// formatter command is itself evaluated by the policy and runs only if it
+/// is allowed on the local backend. A PostToolUse hook cannot undo the edit,
+/// so this hook never blocks; problems are reported on stderr.
+pub async fn posttool_format(buf: &str) -> ExitCode {
+    let Ok(input) = serde_json::from_str::<HookInput>(buf) else {
+        return ExitCode::SUCCESS;
+    };
+    if !matches!(input.tool_name.as_str(), "Edit" | "Write" | "MultiEdit") {
+        return ExitCode::SUCCESS;
+    }
+    let Some(file) = input.tool_input.get("file_path").and_then(|f| f.as_str()) else {
+        return ExitCode::SUCCESS;
+    };
+    if let Err(e) = format_file(file, input.cwd.as_deref()).await {
+        eprintln!("afg: formatter skipped for {file}: {e:#}");
+    }
+    ExitCode::SUCCESS
+}
+
+async fn format_file(file: &str, cwd: Option<&str>) -> anyhow::Result<()> {
+    use afg_core::{BackendKind, EvalRequest};
+    use afg_executor::{ExecutionRequest, Executor, LocalExecutor};
+
+    let cwd = match cwd {
+        Some(c) => std::path::PathBuf::from(c),
+        None => std::env::current_dir()?,
+    }
+    .canonicalize()?;
+    let p = project::load(&cwd)?;
+    let path = cwd.join(file).canonicalize()?;
+    anyhow::ensure!(path.starts_with(&p.root), "file is outside the project");
+    let Some(argv) = formatter_for(&path) else {
+        return Ok(());
+    };
+    let path_env = std::env::var_os("PATH");
+    let d = p.engine.evaluate(&EvalRequest {
+        argv: &argv,
+        cwd: &cwd,
+        path_env: path_env.as_deref(),
+        requested_backend: None,
+    });
+    let policy = p.engine.policy();
+    let log = AuditLog::open(&p.root.join(&policy.audit.dir), policy.audit.redact_secrets)?;
+    let mut rec = AuditRecord::from_decision(new_id(), "hook:claude-code:format", &cwd, &d);
+    if d.effect != Effect::Allow || d.backend != Some(BackendKind::Local) {
+        log.append(&rec)?;
+        anyhow::bail!("`{}` is {} by rule `{}`", argv[0], d.effect, d.rule_id);
+    }
+    let Some(program) = d.normalized.program.clone() else {
+        log.append(&rec)?;
+        anyhow::bail!("`{}` is not installed", argv[0]);
+    };
+    let local = &policy.execution.backends.local;
+    let res = LocalExecutor
+        .execute(ExecutionRequest {
+            id: rec.id.clone(),
+            argv: d.normalized.exec_argv.clone(),
+            arg0: d.normalized.inner_argv.first().cloned(),
+            cwd: cwd.clone(),
+            workspace_root: p.root.clone(),
+            env: crate::backends::host_env(&local.env),
+            timeout: std::time::Duration::from_secs(60.min(local.timeout_seconds)),
+            pinned: afg_executor::pin::pin_request_files(Some(&program), &[], &cwd, &p.root),
+            stream: false,
+            capture_limit: 16 * 1024,
+        })
+        .await;
+    match res {
+        Ok(r) => {
+            rec.execution = Some(crate::run::execution_record(&r));
+            log.append(&rec)?;
+            if !r.success() {
+                anyhow::bail!("{}", String::from_utf8_lossy(&r.stderr.bytes).trim());
+            }
+        }
+        Err(e) => {
+            rec.error = Some(e.to_string());
+            log.append(&rec)?;
+            return Err(e.into());
+        }
+    }
+    Ok(())
 }

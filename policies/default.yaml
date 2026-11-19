@@ -79,6 +79,7 @@ rules:
       - [cargo, check]
       - [cargo, clippy]
       - [cargo, fmt]
+      - [rustfmt]
       - [cargo, test]
       - [cargo, build]
       - [go, build]

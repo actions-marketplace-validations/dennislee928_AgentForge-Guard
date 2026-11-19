@@ -409,3 +409,36 @@ fn claude_pretool_hook_fails_closed() {
         .unwrap();
     assert!(out.stdout.is_empty());
 }
+
+#[test]
+fn claude_posttool_formats_allowed_files_only() {
+    let r = Repo::initialized();
+    let messy = "fn   main( ){ println!(\"hi\") ; }\n";
+    std::fs::create_dir_all(r.root.join("services/worker/src")).unwrap();
+    let file = r.root.join("services/worker/src/main.rs");
+    std::fs::write(&file, messy).unwrap();
+    let input = serde_json::json!({"tool_name": "Write", "cwd": r.root, "tool_input": {"file_path": "services/worker/src/main.rs"}});
+    r.afg()
+        .args(["hook", "claude-posttool-format"])
+        .write_stdin(input.to_string())
+        .assert()
+        .success();
+    let formatted = std::fs::read_to_string(&file).unwrap();
+    if Command::new("rustfmt")
+        .arg("--version")
+        .output()
+        .is_ok_and(|o| o.status.success())
+    {
+        assert_eq!(formatted, "fn main() {\n    println!(\"hi\");\n}\n");
+    }
+    // Files outside the project are never touched, and the hook never blocks.
+    let outside = tempfile::NamedTempFile::new().unwrap();
+    std::fs::write(outside.path(), messy).unwrap();
+    let input = serde_json::json!({"tool_name": "Edit", "cwd": r.root, "tool_input": {"file_path": outside.path()}});
+    r.afg()
+        .args(["hook", "claude-posttool-format"])
+        .write_stdin(input.to_string())
+        .assert()
+        .success();
+    assert_eq!(std::fs::read_to_string(outside.path()).unwrap(), messy);
+}

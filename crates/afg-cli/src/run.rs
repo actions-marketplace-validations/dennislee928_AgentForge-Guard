@@ -186,7 +186,7 @@ fn stream_record(c: &Captured) -> StreamRecord {
     }
 }
 
-fn execution_record(r: &ExecutionResult) -> ExecutionRecord {
+pub fn execution_record(r: &ExecutionResult) -> ExecutionRecord {
     ExecutionRecord {
         exit_code: r.exit_code,
         timed_out: r.timed_out,
