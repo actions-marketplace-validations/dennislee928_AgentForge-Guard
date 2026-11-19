@@ -91,7 +91,9 @@ jobs:
       - name: GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dist/* --verify-tag --generate-notes --title "AgentForge Guard ${GITHUB_REF_NAME}"
+        run: |
+          pre=""; case "${GITHUB_REF_NAME}" in *-*) pre="--prerelease";; esac
+          gh release create "${GITHUB_REF_NAME}" dist/* --verify-tag --generate-notes $pre --title "AgentForge Guard ${GITHUB_REF_NAME}"
 
   publish:
     needs: release

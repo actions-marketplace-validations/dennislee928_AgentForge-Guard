@@ -385,3 +385,23 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Release.** Version `0.4.0`, fast-forward merged to `main`, tagged `v0.4.0` locally.
   - Next: milestone v0.5 (T12.1, the benchmark harness), on branch `milestone/v0.5`.
 - 2026-11-19 — **Phase 12 (v0.5) aligned.** T12.1 delivered std-timing benchmarks with no new dependencies (docs/benchmarks.md). Applying the plan's gate: afg's overhead is about 0.1–0.2 ms per command, under a quarter of a bare process spawn. T12.2 (Zig helper) and T12.3 (Mojo plugin) are **skipped and recorded in ADR 0007**, with explicit conditions for revisiting. Zig and Mojo remain supported as *target* languages. There is no code release for v0.5 beyond the benchmarks, so it is tagged `v0.5.0`, version `0.5.0`. Next: milestone v1.0 (T13.1).
+- 2026-11-20 — **Phase 13 aligned; the v1.0 gate passed technically; tagged `v1.0.0-rc.1`, not `v1.0.0`.**
+  - **Gate results.**
+    - fmt and clippy pass, 187 tests pass with 0 failures, and the 12 ignored-suite tests pass (11 Docker isolation tests plus the opt-in live Cloudflare test, which skips).
+    - cargo-deny passes, and so do the demos and the pnpm checks.
+    - `cargo package --workspace` verifies every crate.
+    - The real `~/.config/agentforge` was untouched by tests, and no `afg-` containers were left behind.
+  - **Why `-rc.1`.** T13.2 asked for *someone else* to review the threat model. I did an internal red-team pass, which found and fixed four gaps with regression tests: hardlinks, unlisted secret stores, policy tampering (now caught by trust pinning), and Edit rules for afg's own config. An independent external review hasn't happened. SECURITY.md makes it a release blocker, and the plan forbids claiming production readiness without it. **`v1.0.0` is blocked only on that review.**
+  - **T13.1.** The cargo-fuzz targets run weekly on nightly in CI. Locally there is no nightly toolchain; I chose not to install one on the user's machine. The same invariants run on stable as proptest properties (about 8,000 cases per run).
+  - **T13.4 deviations and findings.**
+    - The embedded policies and language profiles moved into their crates, which closes the `include_str!` packaging risk carried since Phase 1.
+    - The CLI package is renamed `agentforge-guard` (the binary is still `afg`). All the crate names were checked and are free on crates.io; none are reserved or published.
+    - The release workflow publishes only on a version tag when `CARGO_REGISTRY_TOKEN` exists, and marks `-` tags as pre-releases. Its Windows and x86_64 builds have never been compiled; there is no remote, and I didn't install extra targets locally.
+    - A stale-version trap: `cargo package` can verify against cached sources of an unchanged version number. Always bump the version before packaging.
+  - **T13.5.** `agentforge.dev/v1` has the v1alpha1 structure, and v1alpha1 is accepted with a deprecation warning. `afg policy migrate` changes only the version line and keeps the trust pin if the policy was trusted.
+  - **T13.6.** The README now has Install and Commands sections that match `afg --help`, there is a docs index, and there is a Homebrew formula template. The tap repository is not created.
+  - **Incident during Phase 13.** A test run wrote 15 policy pins into the real `~/.config/agentforge/trusted/` before the tests were isolated. I checked that every one pointed at a test temporary directory, then removed the directory, which hadn't existed before. Tests now use a throwaway HOME for any command that writes pins.
+  - **Remaining for v1.0.0:**
+    1. An independent security review, with a regression test for each finding.
+    2. A first CI run on a real remote, confirming the Linux Docker suite, the Go/Zig live tests, `examples/zig-project`, the action, the security and release workflows, and the Windows build.
+    3. An optional live Cloudflare deployment.
