@@ -343,3 +343,12 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - T8.2 also enforces the Phase 0 note: this repo's own `CLAUDE.md` and `AGENTS.md` must share one body.
 
   Next: Phase 9 (T9.1).
+- 2026-11-19 — **Phase 9 aligned, and the v0.2 gate passed.**
+  - **Gate results.** fmt and clippy pass, 160 tests pass with 0 failures, the 11 Docker tests pass, cargo-deny passes, and the CI demos pass.
+  - **T9.1.** SARIF results are anchored at the deciding rule's line in `agentforge.yaml`. Built-in rules fall back to line 1. Audit ids serve as partial fingerprints.
+  - **T9.2.** The composite action builds `afg` from source, because there are no release binaries until T13.4. It is self-tested in CI with `uses: ./` against the example. Not verified: the action and the CI workflows have never run, since there is no remote.
+  - **T9.3.** Conformance covers every policy and adversarial fixture (all cases without `requested`). Hook decisions are identical whenever the quoted string tokenizes, and the multicall `argv[0]` regression test is now in place.
+  - **Fix.** `cargo add --path` had pinned the internal path dependencies to `0.1.0-alpha.0`, which blocked the version bump. The pins were removed.
+  - **Housekeeping.** A stray, gitignored `examples/polyglot-monorepo/.agentforge/` left by a manual run was removed. `afg audit report` creates the audit directory when it opens the log; it could open it read-only instead (low priority).
+  - **Release.** Version `0.2.0`, fast-forward merged to `main`, tagged `v0.2.0` locally, not pushed.
+  - Next: milestone v0.3 (T10.1), on branch `milestone/v0.3`.
