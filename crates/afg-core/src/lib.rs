@@ -2,5 +2,6 @@
 
 pub mod policy;
 pub mod schema;
+pub mod validate;
 
 pub use policy::Policy;
