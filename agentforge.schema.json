@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Policy",
+  "description": "The top-level policy document.",
+  "type": "object",
+  "properties": {
+    "agents": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Agent"
+      }
+    },
+    "apiVersion": {
+      "$ref": "#/$defs/ApiVersion"
+    },
+    "audit": {
+      "$ref": "#/$defs/Audit",
+      "default": {
+        "dir": ".agentforge/audit",
+        "format": "json",
+        "redactSecrets": true
+      }
+    },
+    "execution": {
+      "$ref": "#/$defs/Execution",
+      "default": {
+        "backends": {
+          "cloudflare": {
+            "enabled": false
+          },
+          "container": {
+            "cpus": 2.0,
+            "enabled": false,
+            "env": [],
+            "image": "debian:stable-slim",
+            "memoryMB": 2048,
+            "network": "none",
+            "pidsLimit": 256,
+            "readOnlyRootfs": true,
+            "timeoutSeconds": 300
+          },
+          "local": {
+            "enabled": true,
+            "env": [
+              "PATH",
+              "HOME",
+              "USER",
+              "LANG",
+              "TERM",
+              "TMPDIR"
+            ],
+            "timeoutSeconds": 300
+          }
+        },
+        "default": "local",
+        "fallback": "deny"
+      }
+    },
+    "kind": {
+      "$ref": "#/$defs/Kind"
+    },
+    "project": {
+      "$ref": "#/$defs/Project"
+    },
+    "protectedPaths": {
+      "description": "Extra protected paths. These are added to the built-in list and can\nnever remove entries from it. Entries are directories or files\n(`~` is expanded), or basename globs such as `*.secret`.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "rules": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Rule"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "project"
+  ],
+  "$defs": {
+    "Agent": {
+      "type": "string",
+      "enum": [
+        "claude-code",
+        "codex"
+      ]
+    },
+    "ApiVersion": {
+      "description": "The policy API version that this build understands.",
+      "type": "string",
+      "enum": [
+        "agentforge.dev/v1alpha1"
+      ]
+    },
+    "Audit": {
+      "type": "object",
+      "properties": {
+        "dir": {
+          "type": "string",
+          "default": ".agentforge/audit"
+        },
+        "format": {
+          "$ref": "#/$defs/AuditFormat",
+          "default": "json"
+        },
+        "redactSecrets": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "AuditFormat": {
+      "type": "string",
+      "enum": [
+        "json"
+      ]
+    },
+    "BackendKind": {
+      "description": "The execution backends.",
+      "type": "string",
+      "enum": [
+        "local",
+        "container",
+        "cloudflare"
+      ]
+    },
+    "Backends": {
+      "type": "object",
+      "properties": {
+        "cloudflare": {
+          "$ref": "#/$defs/CloudflareBackend",
+          "default": {
+            "enabled": false
+          }
+        },
+        "container": {
+          "$ref": "#/$defs/ContainerBackend",
+          "default": {
+            "cpus": 2.0,
+            "enabled": false,
+            "env": [],
+            "image": "debian:stable-slim",
+            "memoryMB": 2048,
+            "network": "none",
+            "pidsLimit": 256,
+            "readOnlyRootfs": true,
+            "timeoutSeconds": 300
+          }
+        },
+        "local": {
+          "$ref": "#/$defs/LocalBackend",
+          "default": {
+            "enabled": true,
+            "env": [
+              "PATH",
+              "HOME",
+              "USER",
+              "LANG",
+              "TERM",
+              "TMPDIR"
+            ],
+            "timeoutSeconds": 300
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "CloudflareBackend": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContainerBackend": {
+      "type": "object",
+      "properties": {
+        "cpus": {
+          "type": "number",
+          "format": "double",
+          "default": 2.0
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "env": {
+          "description": "Variables passed into the container. Values come from the host, and\nnone are passed by default.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "image": {
+          "type": "string",
+          "default": "debian:stable-slim"
+        },
+        "memoryMB": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 2048,
+          "minimum": 0
+        },
+        "network": {
+          "$ref": "#/$defs/Network",
+          "default": "none"
+        },
+        "pidsLimit": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 256,
+          "minimum": 0
+        },
+        "readOnlyRootfs": {
+          "type": "boolean",
+          "default": true
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 300,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Effect": {
+      "description": "The effect a rule has when it matches.",
+      "type": "string",
+      "enum": [
+        "allow",
+        "route",
+        "require-approval",
+        "deny"
+      ]
+    },
+    "Execution": {
+      "type": "object",
+      "properties": {
+        "backends": {
+          "$ref": "#/$defs/Backends",
+          "default": {
+            "cloudflare": {
+              "enabled": false
+            },
+            "container": {
+              "cpus": 2.0,
+              "enabled": false,
+              "env": [],
+              "image": "debian:stable-slim",
+              "memoryMB": 2048,
+              "network": "none",
+              "pidsLimit": 256,
+              "readOnlyRootfs": true,
+              "timeoutSeconds": 300
+            },
+            "local": {
+              "enabled": true,
+              "env": [
+                "PATH",
+                "HOME",
+                "USER",
+                "LANG",
+                "TERM",
+                "TMPDIR"
+              ],
+              "timeoutSeconds": 300
+            }
+          }
+        },
+        "default": {
+          "description": "The backend used by `allow` and `require-approval` rules that do not\nname one.",
+          "$ref": "#/$defs/BackendKind",
+          "default": "local"
+        },
+        "fallback": {
+          "$ref": "#/$defs/Fallback",
+          "default": "deny"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Fallback": {
+      "description": "What to do with a command that no rule matched, or an opaque command that\nonly `allow` rules matched.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SimpleFallback"
+        },
+        {
+          "$ref": "#/$defs/RouteFallback"
+        }
+      ]
+    },
+    "Kind": {
+      "type": "string",
+      "enum": [
+        "AgentPolicy"
+      ]
+    },
+    "LocalBackend": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "env": {
+          "description": "Environment variables passed through from the host. Everything else is\ncleared.",
+          "type": "array",
+          "default": [
+            "PATH",
+            "HOME",
+            "USER",
+            "LANG",
+            "TERM",
+            "TMPDIR"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 300,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Network": {
+      "type": "string",
+      "enum": [
+        "none",
+        "bridge"
+      ]
+    },
+    "Project": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string",
+          "default": "."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "RouteFallback": {
+      "type": "object",
+      "properties": {
+        "route": {
+          "$ref": "#/$defs/BackendKind"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "route"
+      ]
+    },
+    "Rule": {
+      "type": "object",
+      "properties": {
+        "allowFlags": {
+          "description": "Only for `allow` and `route` rules. When this is set, every flag after\nthe prefix must match an entry, or the rule does not apply.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "backend": {
+          "description": "Required for `route`. Optional for `allow` and `require-approval`,\nwhich default to `execution.default`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackendKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commands": {
+          "description": "Each entry is an argv prefix: the executable name, then leading\narguments. The element `*` matches any single argument.",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "denyArgs": {
+          "description": "Only for `allow` and `route` rules. If any argument after the prefix\nmatches, the rule does not apply. A pattern `--flag` also matches\n`--flag=value`, and a trailing `*` makes the pattern a prefix match.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effect": {
+          "$ref": "#/$defs/Effect"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "effect",
+        "commands"
+      ]
+    },
+    "SimpleFallback": {
+      "type": "string",
+      "enum": [
+        "deny",
+        "require-approval"
+      ]
+    }
+  }
+}

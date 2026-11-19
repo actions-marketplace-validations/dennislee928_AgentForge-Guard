@@ -96,7 +96,7 @@ Working rules for execution:
 
 ### Phase 1 — Policy schema & evaluator (`afg-core`)
 - [x] **T1.1** Write the v1alpha1 serde types with `deny_unknown_fields`. They cover the reference schema plus the `denyArgs`/`allowFlags` rule constraints and `protectedPaths`.
-- [ ] **T1.2** Generate `agentforge.schema.json` with `schemars`. A test checks that the committed schema matches the generated one.
+- [x] **T1.2** Generate `agentforge.schema.json` with `schemars`. A test checks that the committed schema matches the generated one.
 - [ ] **T1.3** Write the semantic validator: duplicate rule ids, unknown backends, a `route` rule with no backend, and a disabled backend being referenced.
 - [ ] **T1.4** Write the normalizer: executable resolution, wrapper unwrapping, shell/indirect opacity, and `git` global-option handling.
 - [ ] **T1.5** Write the protected-path checker, which uses canonicalization and resolves symlinks.
