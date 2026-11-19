@@ -81,7 +81,7 @@ Working rules for execution:
 ### Phase 0 — Foundations
 - [x] **T0.1** Add `LICENSE-MIT` (moved from `LICENSE`) and `LICENSE-APACHE`, and set `license = "MIT OR Apache-2.0"` in the README section and in Cargo.
 - [x] **T0.2** Copy this plan into `docs/plan.md`, with checkboxes and an empty Alignment log. This file is the tracked source of truth for alignment checks.
-- [ ] **T0.3** Write the ADRs in `docs/adr/`:
+- [x] **T0.3** Write the ADRs in `docs/adr/`:
   - 0001 Rust core.
   - 0002 Single policy engine.
   - 0003 Fail-closed normalization.
