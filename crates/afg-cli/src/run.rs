@@ -58,6 +58,17 @@ pub async fn run(a: RunArgs) -> anyhow::Result<ExitCode> {
     });
     let mut rec = AuditRecord::from_decision(new_id(), "run", &cwd, &d);
 
+    if let Some(why) = p.untrusted_reason() {
+        eprintln!("afg: denied: {why}");
+        rec.decision.effect = Effect::Deny;
+        rec.decision.backend = None;
+        rec.decision.rule_id = "builtin:untrusted-policy".into();
+        rec.decision.reasons.push(why);
+        audit.append(&rec)?;
+        return Ok(ExitCode::from(EXIT_DENIED));
+    }
+    p.warn_if_unpinned();
+
     match d.effect {
         Effect::Deny => {
             eprintln!(

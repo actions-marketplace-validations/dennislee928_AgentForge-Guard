@@ -26,6 +26,14 @@ pub const DEFAULT_HOME_PATHS: &[&str] = &[
     ".pypirc",
     ".cargo/credentials",
     ".cargo/credentials.toml",
+    // Added by the T13.2 review: secret stores and tokens.
+    ".vault-token",
+    ".terraform.d",
+    ".terraformrc",
+    ".password-store",
+    ".local/share/keyrings",
+    ".config/op",
+    "Library/Keychains",
 ];
 
 /// Protected absolute locations.
@@ -49,6 +57,15 @@ pub const DEFAULT_GLOBS: &[&str] = &[
     "*.tfstate.backup",
     ".netrc",
     ".git-credentials",
+    // Added by the T13.2 review: shell and REPL histories often hold secrets.
+    ".bash_history",
+    ".zsh_history",
+    ".sh_history",
+    ".python_history",
+    ".node_repl_history",
+    ".psql_history",
+    ".mysql_history",
+    ".lesshst",
 ];
 
 #[derive(Debug, Clone)]
@@ -57,6 +74,61 @@ pub struct ProtectedPaths {
     /// Each path in both its lexical and its canonical form.
     paths: Vec<PathBuf>,
     globs: Vec<String>,
+    /// (device, inode) of the regular files inside the protected paths, used
+    /// to catch hardlinks to them (T13.2). It is built on first use.
+    inodes: std::sync::Arc<std::sync::OnceLock<std::collections::HashSet<(u64, u64)>>>,
+}
+
+/// Limits for the protected-inode scan.
+const INODE_SCAN_MAX_FILES: usize = 5_000;
+const INODE_SCAN_MAX_DEPTH: usize = 4;
+
+#[cfg(unix)]
+fn file_id(m: &std::fs::Metadata) -> Option<(u64, u64)> {
+    use std::os::unix::fs::MetadataExt;
+    Some((m.dev(), m.ino()))
+}
+
+#[cfg(not(unix))]
+fn file_id(_m: &std::fs::Metadata) -> Option<(u64, u64)> {
+    None
+}
+
+#[cfg(unix)]
+fn link_count(m: &std::fs::Metadata) -> u64 {
+    use std::os::unix::fs::MetadataExt;
+    m.nlink()
+}
+
+#[cfg(not(unix))]
+fn link_count(_m: &std::fs::Metadata) -> u64 {
+    1
+}
+
+fn scan_inodes(roots: &[PathBuf]) -> std::collections::HashSet<(u64, u64)> {
+    let mut out = std::collections::HashSet::new();
+    let mut stack: Vec<(PathBuf, usize)> = roots.iter().map(|r| (r.clone(), 0)).collect();
+    let mut seen = 0usize;
+    while let Some((p, depth)) = stack.pop() {
+        let Ok(m) = std::fs::symlink_metadata(&p) else {
+            continue;
+        };
+        seen += 1;
+        if seen > INODE_SCAN_MAX_FILES {
+            break;
+        }
+        if m.is_file() {
+            if let Some(id) = file_id(&m) {
+                out.insert(id);
+            }
+        } else if m.is_dir()
+            && depth < INODE_SCAN_MAX_DEPTH
+            && let Ok(rd) = std::fs::read_dir(&p)
+        {
+            stack.extend(rd.filter_map(Result::ok).map(|e| (e.path(), depth + 1)));
+        }
+    }
+    out
 }
 
 impl ProtectedPaths {
@@ -84,7 +156,12 @@ impl ProtectedPaths {
         paths.extend(canonical);
         paths.sort();
         paths.dedup();
-        Self { home, paths, globs }
+        Self {
+            home,
+            paths,
+            globs,
+            inodes: Default::default(),
+        }
     }
 
     /// Return a reason if the command touches a protected path.
@@ -121,6 +198,22 @@ impl ProtectedPaths {
             if self.paths.iter().any(|root| f.starts_with(root)) {
                 return Some(f.display().to_string());
             }
+        }
+        // A hardlink to a protected file has an innocent name and path, but
+        // the same inode.
+        if let Ok(m) = std::fs::metadata(&joined)
+            && m.is_file()
+            && link_count(&m) > 1
+            && let Some(id) = file_id(&m)
+            && self
+                .inodes
+                .get_or_init(|| scan_inodes(&self.paths))
+                .contains(&id)
+        {
+            return Some(format!(
+                "{} (hardlink to a protected file)",
+                joined.display()
+            ));
         }
         None
     }
@@ -352,6 +445,32 @@ mod tests {
         let f = Fixture::new("gitc");
         let ssh = f.home.join(".ssh").display().to_string();
         assert!(f.check(&["git", "-C", &ssh, "status"]).is_some());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn hardlinks_to_protected_files_denied() {
+        let f = Fixture::new("hard");
+        std::fs::hard_link(f.home.join(".ssh/id_ed25519"), f.repo.join("notes.txt")).unwrap();
+        assert!(f.check(&["cat", "notes.txt"]).unwrap().contains("hardlink"));
+        // Ordinary hardlinks elsewhere are fine.
+        std::fs::write(f.repo.join("a.txt"), "x").unwrap();
+        std::fs::hard_link(f.repo.join("a.txt"), f.repo.join("b.txt")).unwrap();
+        assert_eq!(f.check(&["cat", "b.txt"]), None);
+    }
+
+    #[test]
+    fn histories_and_secret_stores_denied() {
+        let f = Fixture::new("hist");
+        for p in [
+            "~/.zsh_history",
+            "~/.bash_history",
+            "~/.vault-token",
+            "~/.terraform.d/credentials.tfrc.json",
+        ] {
+            assert!(f.check(&["cat", p]).is_some(), "{p}");
+        }
+        assert!(f.check(&["cat", "logs/.psql_history"]).is_some());
     }
 
     #[test]

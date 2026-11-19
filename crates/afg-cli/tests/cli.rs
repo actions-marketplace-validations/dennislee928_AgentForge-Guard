@@ -37,8 +37,25 @@ impl Repo {
 
     fn initialized() -> Self {
         let r = Self::polyglot();
-        r.afg().arg("init").assert().success();
+        r.init(&[]).assert().success();
         r
+    }
+
+    /// `afg init` (and `afg policy trust`) pin the policy under
+    /// `$HOME/.config/agentforge`, so they always run with a throwaway home
+    /// and tests never write to the real one. Other commands keep the real
+    /// HOME so that toolchains such as rustup still resolve; they only read
+    /// pins and never write them.
+    fn init(&self, extra: &[&str]) -> Command {
+        let mut c = self.afg();
+        c.env("HOME", self.home()).arg("init").args(extra);
+        c
+    }
+
+    fn home(&self) -> PathBuf {
+        let h = self._tmp.path().join("home");
+        std::fs::create_dir_all(&h).unwrap();
+        h
     }
 
     fn afg(&self) -> Command {
@@ -69,20 +86,17 @@ impl Repo {
 #[test]
 fn init_writes_policy_and_refuses_to_overwrite() {
     let r = Repo::polyglot();
-    r.afg()
-        .arg("init")
+    r.init(&[])
         .assert()
         .success()
         .stderr(predicate::str::contains("wrote"));
     let yaml = std::fs::read_to_string(r.root.join("agentforge.yaml")).unwrap();
     assert!(yaml.contains("name: \"polyglot\""));
-    r.afg()
-        .arg("init")
+    r.init(&[])
         .assert()
         .code(2)
         .stderr(predicate::str::contains("--force"));
-    r.afg()
-        .args(["init", "--force", "--template", "strict"])
+    r.init(&["--force", "--template", "strict"])
         .assert()
         .success();
     assert!(
@@ -596,4 +610,64 @@ fn run_preserves_argv0_for_multicall_binaries() {
         String::from_utf8_lossy(&out.stderr)
     );
     assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "zz-multicall");
+}
+
+/// Regression (T13.2 review): an agent that edits agentforge.yaml to loosen
+/// it must not gain anything. Once pinned, every command is denied until a
+/// human re-trusts the policy.
+#[test]
+fn edited_policy_is_untrusted_until_a_human_re_trusts_it() {
+    let r = Repo::initialized();
+    let with_home = |args: &[&str]| {
+        let mut c = r.afg();
+        c.env("HOME", r.home()).args(args);
+        c
+    };
+    with_home(&["run", "--", "ls"]).assert().success();
+    with_home(&["run", "--", "curl", "https://example.com"])
+        .assert()
+        .code(126);
+
+    // The "agent" appends an allow-everything rule.
+    let path = r.root.join("agentforge.yaml");
+    let yaml = std::fs::read_to_string(&path).unwrap();
+    let loosened = yaml.replacen(
+        "rules:\n",
+        "rules:\n  - { id: pwn, effect: allow, commands: [[curl]] }\n",
+        1,
+    );
+    assert_ne!(loosened, yaml);
+    std::fs::write(&path, loosened).unwrap();
+
+    with_home(&["run", "--", "curl", "https://example.com"])
+        .assert()
+        .code(126)
+        .stderr(predicate::str::contains("changed since it was trusted"));
+    with_home(&["run", "--", "ls"]).assert().code(126);
+    let out = with_home(&["audit", "tail", "--json", "-n", "1"])
+        .output()
+        .unwrap();
+    let last: serde_json::Value =
+        serde_json::from_str(String::from_utf8_lossy(&out.stdout).trim()).unwrap();
+    assert_eq!(last["decision"]["ruleId"], "builtin:untrusted-policy");
+
+    let input =
+        serde_json::json!({"tool_name": "Bash", "tool_input": {"command": "ls"}, "cwd": r.root});
+    let out = with_home(&["hook", "claude-pretool"])
+        .write_stdin(input.to_string())
+        .output()
+        .unwrap();
+    assert!(String::from_utf8_lossy(&out.stdout).contains("\"deny\""));
+
+    let out = with_home(&["doctor", "--json"]).output().unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(v["policy"]["trust"].as_str().unwrap().contains("CHANGED"));
+
+    // The agent cannot re-trust through afg (afg never runs itself)...
+    with_home(&["run", "--", "afg", "policy", "trust"])
+        .assert()
+        .code(126);
+    // ...but a human can.
+    with_home(&["policy", "trust"]).assert().success();
+    with_home(&["run", "--", "ls"]).assert().success();
 }

@@ -39,6 +39,10 @@ The **agent itself**, or **code the agent generated or fetched** (scripts, depen
 8. **Approval spoofing:** the agent answers its own prompt. Approval is read only from the controlling TTY; with no TTY, the command is denied.
 9. **Secret exfiltration through output or audit:** output and audit are redacted, and the environment is cleared down to an allowlist.
 10. **Sandbox escape:** Docker socket or `$HOME` mounts, privileged flags, capabilities. These are never used (ADR 0004).
+11. **Hardlinks to secrets** (found in the T13.2 review): an innocent-looking path that shares an inode with a protected file. A file with a link count above 1 is checked against the inodes inside the protected paths.
+12. **Unlisted secret stores** (T13.2): shell and REPL histories, `~/.vault-token`, `~/.terraform.d`, password stores and keychains are now built-in protected paths.
+13. **Policy tampering** (T13.2): the agent edits `agentforge.yaml` (or `.claude/settings.json`) to loosen its own rules. `afg init` and `afg policy trust` pin the policy hash under the protected `~/.config/agentforge`, and a changed policy denies everything. `afg agents sync claude` adds Edit deny rules for afg's own config files.
+14. **Self-approval and self-trust:** the agent runs `afg approve` or `afg policy trust`. afg never runs itself, in managed mode or the hook.
 
 ## Out of scope (v0.1)
 

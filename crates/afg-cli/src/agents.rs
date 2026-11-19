@@ -151,19 +151,10 @@ pub fn upsert_section(existing: Option<&str>, section: &str) -> String {
 
 /// Claude Code permission rules for protected paths (Read and Edit deny).
 pub fn protected_path_rules(policy: &Policy) -> Vec<String> {
+    // Each home entry may be a file or a directory, so emit both forms.
     let mut patterns: Vec<String> = DEFAULT_HOME_PATHS
         .iter()
-        .map(|p| {
-            let is_file = p.contains("credentials")
-                || p.starts_with(".netrc")
-                || p.starts_with(".git-")
-                || p.ends_with("rc");
-            if is_file {
-                format!("~/{p}")
-            } else {
-                format!("~/{p}/**")
-            }
-        })
+        .flat_map(|p| [format!("~/{p}"), format!("~/{p}/**")])
         .collect();
     patterns.extend(DEFAULT_GLOBS.iter().map(|g| format!("**/{g}")));
     for extra in &policy.protected_paths {
@@ -185,6 +176,15 @@ pub fn protected_path_rules(policy: &Policy) -> Vec<String> {
     for pat in patterns {
         out.push(format!("Read({pat})"));
         out.push(format!("Edit({pat})"));
+    }
+    // The agent must not loosen its own guardrails (T13.2 review).
+    for own in [
+        "./agentforge.yaml",
+        "./.claude/settings.json",
+        "./.codex/config.toml",
+        "./.agentforge/**",
+    ] {
+        out.push(format!("Edit({own})"));
     }
     out
 }

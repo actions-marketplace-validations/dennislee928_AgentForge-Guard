@@ -52,6 +52,14 @@ pub fn run(a: InitArgs) -> anyhow::Result<ExitCode> {
     }
     std::fs::write(&target, &yaml).with_context(|| format!("writing {}", target.display()))?;
     eprintln!("afg: wrote {}", target.display());
+    if let Some(home) = crate::project::home_dir() {
+        let parsed = afg_core::Policy::from_yaml(&yaml)?;
+        let hash = afg_core::eval::policy_hash(&parsed);
+        crate::trust::pin(&home, &target, &hash)?;
+        eprintln!(
+            "  trusted this policy; edits to it will deny commands until `afg policy trust` is run again"
+        );
+    }
     for p in &detection.projects {
         eprintln!("  detected {:?} project in {}", p.kind, p.dir.display());
     }

@@ -32,6 +32,7 @@ struct Report {
 struct PolicyStatus {
     path: String,
     hash: String,
+    trust: String,
     warnings: Vec<String>,
 }
 
@@ -146,6 +147,13 @@ pub async fn run(a: DoctorArgs) -> anyhow::Result<ExitCode> {
         policy: PolicyStatus {
             path: p.policy_path.display().to_string(),
             hash: p.engine.policy_hash().to_owned(),
+            trust: match &p.trust {
+                crate::trust::Status::Trusted => "trusted".into(),
+                crate::trust::Status::Unpinned => "not pinned (run `afg policy trust`)".into(),
+                crate::trust::Status::Changed { .. } => {
+                    "CHANGED since trusted: every command is denied".into()
+                }
+            },
             warnings: p.warnings.clone(),
         },
         backends,
@@ -177,6 +185,7 @@ async fn image_status(image: &str) -> &'static str {
 
 fn print_human(r: &Report) {
     println!("policy    {} ({})", r.policy.path, r.policy.hash);
+    println!("trust     {}", r.policy.trust);
     for w in &r.policy.warnings {
         println!("  {w}");
     }

@@ -23,6 +23,7 @@ mod policy_cmd;
 mod project;
 mod run;
 mod tokens;
+mod trust;
 
 pub const POLICY_FILE: &str = "agentforge.yaml";
 

@@ -22,6 +22,7 @@ cargo install --path crates/afg-cli          # installs the `afg` binary
 cd examples/polyglot-monorepo                # or any repository of yours
 afg init --force                             # writes agentforge.yaml from detected stacks
 afg doctor                                   # stacks, per-command decisions, backends, risks
+afg policy trust                             # (init already did this) pin the reviewed policy; later edits deny everything
 ```
 
 Run commands through the policy:

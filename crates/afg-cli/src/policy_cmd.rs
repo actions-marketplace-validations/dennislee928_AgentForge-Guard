@@ -17,6 +17,9 @@ pub enum PolicyCommand {
     Validate(ValidateArgs),
     /// Print the JSON Schema for agentforge.yaml.
     Schema,
+    /// Pin the current policy (run by a human after reviewing it). Later
+    /// edits to the policy deny every command until it is trusted again.
+    Trust,
 }
 
 #[derive(Debug, clap::Args)]
@@ -58,6 +61,19 @@ pub fn run(cmd: PolicyCommand) -> anyhow::Result<ExitCode> {
     match cmd {
         PolicyCommand::Explain(a) => explain(a),
         PolicyCommand::Validate(a) => validate_cmd(a),
+        PolicyCommand::Trust => {
+            let cwd = std::env::current_dir()?.canonicalize()?;
+            let p = project::load(&cwd)?;
+            let home = project::home_dir().context("no home directory")?;
+            let path = crate::trust::pin(&home, &p.policy_path, p.engine.policy_hash())?;
+            eprintln!(
+                "afg: trusted {} ({}) -> {}",
+                p.policy_path.display(),
+                p.engine.policy_hash(),
+                path.display()
+            );
+            Ok(ExitCode::SUCCESS)
+        }
         PolicyCommand::Schema => {
             print!("{}", afg_core::schema::policy_schema_json());
             Ok(ExitCode::SUCCESS)

@@ -13,6 +13,7 @@ pub struct Project {
     pub policy_path: PathBuf,
     pub engine: Engine,
     pub warnings: Vec<String>,
+    pub trust: crate::trust::Status,
 }
 
 pub fn home_dir() -> Option<PathBuf> {
@@ -63,11 +64,36 @@ pub fn load(cwd: &Path) -> anyhow::Result<Project> {
         .collect();
     let project_root = root.join(&policy.project.root);
     let project_root = project_root.canonicalize().unwrap_or(root.clone());
-    let engine = Engine::new(policy, &project_root, home_dir().as_deref());
+    let home = home_dir();
+    let engine = Engine::new(policy, &project_root, home.as_deref());
+    let trust = crate::trust::status(home.as_deref(), &policy_path, engine.policy_hash());
     Ok(Project {
         root: project_root,
         policy_path,
         engine,
         warnings,
+        trust,
     })
+}
+
+impl Project {
+    /// The reason every decision must be denied, if the pinned policy changed.
+    pub fn untrusted_reason(&self) -> Option<String> {
+        match &self.trust {
+            crate::trust::Status::Changed { pinned } => Some(format!(
+                "{} changed since it was trusted ({pinned}); a human must review it and run `afg policy trust`",
+                self.policy_path.display()
+            )),
+            _ => None,
+        }
+    }
+
+    /// Print a warning when the policy has never been pinned.
+    pub fn warn_if_unpinned(&self) {
+        if self.trust == crate::trust::Status::Unpinned {
+            eprintln!(
+                "afg: warning: policy is not pinned; run `afg policy trust` so that edits to it are detected"
+            );
+        }
+    }
 }

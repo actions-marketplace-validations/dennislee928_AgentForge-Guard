@@ -30,6 +30,14 @@ We aim to acknowledge reports within 3 business days.
 - Kernel or container-runtime escapes that afg's configuration does not cause.
 - Agents that do not use afg.
 
+## Review status
+
+The threat model has had an **internal** red-team review (T13.2). It found and
+fixed hardlink bypasses, unlisted secret stores, policy tampering, and
+generated Claude settings that allowed edits to afg's own config. An
+**independent external review is still pending**, and v1.0 will not be
+declared production-ready without it.
+
 ## Supported versions
 
 During pre-alpha, only the latest `main` receives fixes.

@@ -82,3 +82,8 @@ cases:
   - { argv: [afg, approve, "0123"], expect: deny, rule: "builtin:forbidden" }
   - { argv: [nohup, afg, approve, "--yes", "0123"], expect: deny, rule: "builtin:forbidden" }
   - { argv: [cat, $HOME/.config/agentforge/approval.key], expect: deny, rule: "builtin:protected-path" }
+  # 10. Added by the T13.2 review: histories and secret stores.
+  - { argv: [cat, ~/.zsh_history], expect: deny, rule: "builtin:protected-path" }
+  - { argv: [tail, -n, "50", $HOME/.bash_history], expect: deny, rule: "builtin:protected-path" }
+  - { argv: [cat, ~/.vault-token], expect: deny, rule: "builtin:protected-path" }
+  - { argv: [cat, ~/.terraform.d/credentials.tfrc.json], expect: deny, rule: "builtin:protected-path" }

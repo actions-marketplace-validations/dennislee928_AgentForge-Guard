@@ -112,6 +112,9 @@ pub fn decide(command: &str, cwd: Option<&str>) -> anyhow::Result<(ShellDecision
     };
     let cwd = cwd.canonicalize()?;
     let p = project::load(&cwd)?;
+    if let Some(why) = p.untrusted_reason() {
+        anyhow::bail!("{why}");
+    }
     let path = std::env::var_os("PATH");
     let d = p.engine.evaluate_shell(command, &cwd, path.as_deref());
 
