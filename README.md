@@ -9,7 +9,7 @@
 
 > Local-first for deterministic development; sandbox-first for untrusted execution; approval-gated for infrastructure mutation.
 
-Status: **v0.3.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
+Status: **v0.4.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
 
 ## Quickstart
 
@@ -96,7 +96,8 @@ Read these before relying on afg:
 - **Docker isolation is only as strong as the Docker runtime and kernel.** Pin images by digest.
 - **Agents that don't use `afg` are not affected by it.** Agent-level read rules and OS sandboxes are still needed.
 - **The hook sees only what the agent sends it.** Tools other than Bash, such as file reads, are covered only by the generated Read/Edit deny rules.
-- **There is no Windows support for process-group cleanup yet.** The Cloudflare backend is planned for v0.4.
+- **The Cloudflare backend** (`packages/cloudflare-adapter`) is contract-tested against a mock Worker but has not run against a live account yet. See [docs/provider-compatibility.md](docs/provider-compatibility.md).
+- **There is no Windows support for process-group cleanup yet.**
 
 ## Exit codes
 
