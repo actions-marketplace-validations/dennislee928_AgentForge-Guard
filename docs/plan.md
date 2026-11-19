@@ -367,3 +367,20 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Risk carried forward.** More `include_str!` calls reach outside the crate (`language-profiles/`). This must be resolved before `cargo publish` (T13.4).
   - **Release.** Version `0.3.0`, fast-forward merged to `main`, tagged `v0.3.0` locally.
   - Next: milestone v0.4 (Cloudflare). T11.2 needs the current Sandbox SDK docs. A live deployment would need a Cloudflare account, which we don't have, so T11.5's live test stays opt-in.
+- 2026-11-19 — **Phase 11 aligned, and the v0.4 gate passed.**
+  - **Gate results.**
+    - fmt and clippy pass, 178 tests pass with 0 failures, and the 12 ignored-suite tests pass (11 Docker, plus the live Cloudflare test, which skips without credentials).
+    - cargo-deny passes, and so do the demos.
+    - The pnpm checks pass: the policy types match the schema, the adapter type-checks, and the 5 vitest tests pass.
+  - **SDK verification (T11.2).** Before writing the adapter, I read the current Cloudflare docs (the 0.x → 1.0 migration guide and API map) and the real type definitions (`@cloudflare/sandbox` 1.0.3, `@cloudflare/workers-types` 5.20261119.1). The 1.0 model is a user-written Durable Object, where `env.NS.getByName(id)`, `ctx.container.start({image, enableInternet})` (internet off by default), `exec(argv, {cwd, env, user, stdin})`, `output()` and `destroy()` do the work. There are no sessions, and no timeout option on exec.
+  - **Deviation: no SDK dependency.** The adapter doesn't depend on `@cloudflare/sandbox`. Its `Files` helper needs `sandbox-shim` inside the image, so the snapshot is streamed as a tar into `tar -x` over exec stdin instead. That needs only coreutils and tar, and avoids guessing at the shim's install path. The "pin the SDK major version" requirement is therefore met by pinning `@cloudflare/workers-types` and `wrangler`.
+  - **Security design.**
+    - An HMAC-SHA256 signature over the raw body, checked against one shared test vector by both the Rust signer and the TypeScript verifier.
+    - A ±300 s `issuedAt` window.
+    - One Durable Object per request id, so replays are refused.
+    - The container runs as uid 65534 under coreutils `timeout`, is always destroyed, and has a TTL alarm as a backstop.
+    - afg verifies that the manifest hash it gets back matches the snapshot it sent.
+  - **Deviation: license exception.** CDLA-Permissive-2.0 is allowed only for `webpki-roots` and `webpki-root-certs`, the Mozilla CA data that ureq/rustls need. ureq uses the platform verifier.
+  - **Not verified.** There has been no deployment to a real Cloudflare account. That needs an account and an irreversible migration, which is not something to do without the user. `wrangler deploy --dry-run` accepted the config and bundled the Worker. The live test is opt-in (`AFG_CF_LIVE_ENDPOINT`, `AFG_CLOUDFLARE_KEY`).
+  - **Release.** Version `0.4.0`, fast-forward merged to `main`, tagged `v0.4.0` locally.
+  - Next: milestone v0.5 (T12.1, the benchmark harness), on branch `milestone/v0.5`.
