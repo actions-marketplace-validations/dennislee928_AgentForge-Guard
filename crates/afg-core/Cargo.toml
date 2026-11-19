@@ -10,3 +10,9 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+serde_norway = "0.9.42"
+thiserror = "2.0.21"
+
+[dev-dependencies]
+indoc = "2.0.8"
