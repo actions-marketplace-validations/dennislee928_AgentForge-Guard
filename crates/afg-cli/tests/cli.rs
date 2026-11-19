@@ -555,3 +555,38 @@ fn repo_contributor_files_share_one_body() {
     };
     assert_eq!(body("CLAUDE.md"), body("AGENTS.md"));
 }
+
+/// Regression (found by the v0.1 clean-checkout run): multicall binaries
+/// such as rustup's `cargo` dispatch on argv[0]. afg executes the canonical
+/// path, but the child must see the name as invoked.
+#[cfg(unix)]
+#[test]
+fn run_preserves_argv0_for_multicall_binaries() {
+    let r = Repo::polyglot();
+    std::fs::write(
+        r.root.join("agentforge.yaml"),
+        "apiVersion: agentforge.dev/v1alpha1\nkind: AgentPolicy\nproject: { name: t }\n\
+         rules: [{ id: tool, effect: allow, commands: [[zz-multicall]] }]\n",
+    )
+    .unwrap();
+    let bin = tempfile::tempdir().unwrap();
+    // `sh -c 'echo $0'` prints its own argv[0], which stands in for a multicall dispatcher.
+    std::os::unix::fs::symlink("/bin/sh", bin.path().join("zz-multicall")).unwrap();
+    let path = format!(
+        "{}:{}",
+        bin.path().display(),
+        std::env::var("PATH").unwrap()
+    );
+    let out = r
+        .afg()
+        .env("PATH", &path)
+        .args(["run", "-q", "--", "zz-multicall", "-c", "echo $0"])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "zz-multicall");
+}

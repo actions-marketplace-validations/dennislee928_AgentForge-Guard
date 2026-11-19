@@ -190,7 +190,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 ### Phase 9 — Reporting & CI
 - [x] **T9.1** Write `afg audit report --format json|sarif`. Denied and approval-gated events map to SARIF results.
 - [x] **T9.2** Build a composite GitHub Action, `action.yml`, that runs `afg doctor` and `afg policy validate` and uploads the SARIF.
-- [ ] **T9.3** Write conformance tests that check the hook decisions equal the `afg policy explain` decisions across every fixture.
+- [x] **T9.3** Write conformance tests that check the hook decisions equal the `afg policy explain` decisions across every fixture.
 - **Gate:** run the alignment check and tag `v0.2.0`.
 
 ## Milestone v0.3 — Language Profiles (Zig, data-driven detection)
