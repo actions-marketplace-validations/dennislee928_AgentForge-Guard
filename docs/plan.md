@@ -146,7 +146,7 @@ Working rules for execution:
 - **Gate:** run the alignment check.
 
 ### Phase 4 — Audit & redaction (`afg-report`)
-- [ ] **T4.1** Write the audit record type and the JSONL writer, which uses append mode and file locking.
+- [x] **T4.1** Write the audit record type and the JSONL writer, which uses append mode and file locking.
 - [ ] **T4.2** Write the redactor. It removes env values and scrubs these patterns:
   - AWS, GitHub and Slack tokens.
   - JWTs.
