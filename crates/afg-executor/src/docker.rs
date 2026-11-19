@@ -108,6 +108,7 @@ impl DockerExecutor {
     /// Check that the docker daemon answers, and return its version.
     pub async fn check_available(&self) -> Result<String, ExecutionError> {
         let f = run(Spawn {
+            arg0: None,
             program: &self.cfg.docker.to_string_lossy(),
             args: &[
                 "version".into(),
@@ -232,6 +233,7 @@ impl Executor for DockerExecutor {
         env.extend(req.env.iter().cloned());
         let docker = self.cfg.docker.to_string_lossy().into_owned();
         let result = run(Spawn {
+            arg0: None,
             program: &docker,
             args: &args,
             cwd: &root,
@@ -264,6 +266,7 @@ impl Executor for DockerExecutor {
 
     async fn cleanup(&self, id: &str) -> Result<(), ExecutionError> {
         let f = run(Spawn {
+            arg0: None,
             program: &self.cfg.docker.to_string_lossy(),
             args: &["rm".into(), "--force".into(), Self::container_name(id)],
             cwd: Path::new("/"),
@@ -315,6 +318,7 @@ mod tests {
         ExecutionRequest {
             id: "run-1".into(),
             argv: vec!["sh".into(), "./check.sh".into(), "$(x)".into()],
+            arg0: None,
             cwd: "/w".into(),
             workspace_root: "/w".into(),
             env: vec![("CI".into(), "true".into())],

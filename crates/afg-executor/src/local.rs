@@ -33,6 +33,7 @@ impl Executor for LocalExecutor {
         crate::verify_pins(&req)?;
         let f = run(Spawn {
             program,
+            arg0: req.arg0.as_deref(),
             args: &req.argv[1..],
             cwd: &req.cwd,
             env: &req.env,
@@ -65,6 +66,7 @@ mod tests {
         ExecutionRequest {
             id: "t".into(),
             argv: argv.iter().map(|s| s.to_string()).collect(),
+            arg0: None,
             cwd: std::env::temp_dir(),
             workspace_root: std::env::temp_dir(),
             env: vec![("PATH".into(), "/usr/bin:/bin".into())],
@@ -173,5 +175,14 @@ mod tests {
         ];
         assert!(LocalExecutor.execute(r).await.unwrap().success());
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[tokio::test]
+    async fn arg0_is_shown_to_the_child() {
+        // With no arguments after the command string, `sh -c` sets $0 to its own argv[0].
+        let mut r = req(&["/bin/sh", "-c", "echo $0"]);
+        r.arg0 = Some("cargo".into());
+        let res = LocalExecutor.execute(r).await.unwrap();
+        assert_eq!(String::from_utf8_lossy(&res.stdout.bytes).trim(), "cargo");
     }
 }

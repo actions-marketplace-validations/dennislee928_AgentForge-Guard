@@ -10,6 +10,9 @@ use crate::{Captured, ExecutionError};
 
 pub struct Spawn<'a> {
     pub program: &'a str,
+    /// The `argv[0]` the child sees, if it differs from `program`.
+    /// Multicall binaries such as rustup's `cargo` dispatch on it.
+    pub arg0: Option<&'a str>,
     pub args: &'a [String],
     pub cwd: &'a Path,
     pub env: &'a [(String, String)],
@@ -40,7 +43,12 @@ pub async fn run(s: Spawn<'_>) -> Result<Finished, ExecutionError> {
         .stderr(Stdio::piped())
         .kill_on_drop(true);
     #[cfg(unix)]
-    cmd.process_group(0);
+    {
+        cmd.process_group(0);
+        if let Some(a) = s.arg0 {
+            cmd.arg0(a);
+        }
+    }
 
     let start = Instant::now();
     let mut child = cmd.spawn().map_err(|source| ExecutionError::Spawn {

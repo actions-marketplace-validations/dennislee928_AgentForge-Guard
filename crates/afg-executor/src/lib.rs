@@ -44,6 +44,11 @@ pub struct ExecutionRequest {
     /// The argv to run. For the local backend `argv[0]` is the resolved
     /// absolute program path. For containers it is the name as given.
     pub argv: Vec<String>,
+    /// The `argv[0]` the child sees. The local backend executes the canonical
+    /// program path (so a symlink can't be retargeted after the decision) but
+    /// shows the name as invoked, which multicall binaries such as rustup
+    /// need.
+    pub arg0: Option<String>,
     /// The working directory on the host.
     pub cwd: PathBuf,
     /// The project root; containers mount a snapshot of it.
@@ -174,6 +179,7 @@ mod tests {
         ExecutionRequest {
             id: "t".into(),
             argv: vec!["sh".into()],
+            arg0: None,
             cwd: std::env::temp_dir(),
             workspace_root: std::env::temp_dir(),
             env: vec![],

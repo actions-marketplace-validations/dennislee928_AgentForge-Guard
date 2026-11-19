@@ -71,6 +71,7 @@ impl Fixture {
         ExecutionRequest {
             id: format!("{id}-{}", std::process::id()),
             argv: argv.iter().map(|s| s.to_string()).collect(),
+            arg0: None,
             cwd: self.ws.clone(),
             workspace_root: self.ws.clone(),
             env: vec![],

@@ -141,6 +141,7 @@ async fn execute(
             let req = ExecutionRequest {
                 id: id.to_owned(),
                 argv: n.exec_argv.clone(),
+                arg0: n.inner_argv.first().cloned(),
                 cwd: n.cwd.clone(),
                 workspace_root: p.root.clone(),
                 env: host_env(&local.env),
@@ -158,6 +159,7 @@ async fn execute(
             let req = ExecutionRequest {
                 id: id.to_owned(),
                 argv: n.inner_argv.clone(),
+                arg0: None,
                 cwd: n.cwd.clone(),
                 workspace_root: p.root.clone(),
                 env: host_env(&c.env),
