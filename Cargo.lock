@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "afg-cli"
-version = "0.1.0-alpha.0"
+version = "0.1.0"
 dependencies = [
  "afg-core",
  "afg-detect",
@@ -23,7 +23,7 @@ dependencies = [
 
 [[package]]
 name = "afg-core"
-version = "0.1.0-alpha.0"
+version = "0.1.0"
 dependencies = [
  "indoc",
  "schemars",
@@ -36,7 +36,7 @@ dependencies = [
 
 [[package]]
 name = "afg-detect"
-version = "0.1.0-alpha.0"
+version = "0.1.0"
 dependencies = [
  "afg-core",
  "serde",
@@ -46,7 +46,7 @@ dependencies = [
 
 [[package]]
 name = "afg-executor"
-version = "0.1.0-alpha.0"
+version = "0.1.0"
 dependencies = [
  "afg-core",
  "ignore",
@@ -60,7 +60,7 @@ dependencies = [
 
 [[package]]
 name = "afg-report"
-version = "0.1.0-alpha.0"
+version = "0.1.0"
 dependencies = [
  "afg-core",
  "proptest",

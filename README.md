@@ -9,7 +9,7 @@
 
 > Local-first for deterministic development; sandbox-first for untrusted execution; approval-gated for infrastructure mutation.
 
-Status: **pre-alpha (v0.1 in progress)**. See [docs/plan.md](docs/plan.md). It is not production-ready.
+Status: **v0.1.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
 
 ## Quickstart
 
@@ -27,7 +27,7 @@ afg doctor                                   # stacks, per-command decisions, ba
 Run commands through the policy:
 
 ```sh
-afg run -- cargo check                       # allowed → runs locally
+(cd services/rust-service && afg run -- cargo test)   # allowed → runs locally
 afg run -- terraform destroy                 # denied → exit 126, audited
 afg run -- sh scripts/untrusted.sh           # routed → Docker, no network, no secrets
 afg run -- kubectl apply -f k8s/             # asks a human on the terminal
