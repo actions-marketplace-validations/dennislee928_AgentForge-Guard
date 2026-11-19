@@ -303,3 +303,17 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Observation.** `git --version` is denied, because the default policy only allows specific git subcommands. That is fail-closed by design; users can add rules.
   - **Audit.** If the audit log can't be opened, `afg run` refuses to execute. If writing the final record fails, it exits 125.
   - No scope drift. Next: Phase 6 (T6.1).
+- 2026-11-19 — **Phase 6 aligned, and the v0.1 gate passed.**
+  - **Definition of Done results.**
+    - fmt and clippy (`-D warnings`) pass.
+    - 134 tests pass, with 0 failures.
+    - The 11 Docker tests pass with `--ignored`.
+    - cargo-deny passes.
+    - `scripts/ci-demos.sh` passes: demo 2, the denial with audit evidence, and demo 3, the isolated untrusted script.
+    - A secret scan found only the documented fake placeholders.
+    - The README quickstart was verified from a **fresh `git clone` and `cargo install --path crates/afg-cli`**.
+  - **Bug found by the clean-checkout run, and fixed.** The local backend ran the canonical program path, which broke rustup's multicall `cargo` (`~/.cargo/bin/cargo` is a symlink to `rustup`). The executor now sets `argv[0]` to the name as invoked (`CommandExt::arg0`) while still executing the canonical path. A regression test was added. **Follow-up:** add a CLI-level regression test using a symlinked multicall shim (T7.1 or later).
+  - **Not verified locally.** The Docker isolation suite and demos have run only on macOS Docker Desktop (linux/arm64). The Linux reference runner exercises them through `.github/workflows/ci.yml`, which hasn't run yet because there is no remote. Go and Zig toolchains are absent locally; the Go example tests run in CI only once a Go setup step is added (T10.5).
+  - **Release.** Version bumped to `0.1.0`, fast-forward merged to `main`, and tagged `v0.1.0` locally. Nothing was pushed.
+  - **Scope check against the reference.** v0.1 delivers the reference's "Rust CLI + Policy Engine + Docker Sandbox" success criterion: `afg init → afg doctor → afg run → audit report` on a fresh Go/Rust/Next.js repository, with the dangerous command denied and the restricted container unable to reach host test credentials. MCP was dropped, per the user's decision (ADR 0005).
+  - Next: milestone v0.2 (Phase 7, T7.1), on branch `milestone/v0.2`.
