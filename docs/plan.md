@@ -99,7 +99,7 @@ Working rules for execution:
 - [x] **T1.2** Generate `agentforge.schema.json` with `schemars`. A test checks that the committed schema matches the generated one.
 - [x] **T1.3** Write the semantic validator: duplicate rule ids, unknown backends, a `route` rule with no backend, and a disabled backend being referenced.
 - [x] **T1.4** Write the normalizer: executable resolution, wrapper unwrapping, shell/indirect opacity, and `git` global-option handling.
-- [ ] **T1.5** Write the protected-path checker, which uses canonicalization and resolves symlinks.
+- [x] **T1.5** Write the protected-path checker, which uses canonicalization and resolves symlinks.
 - [ ] **T1.6** Write the evaluator, covering precedence, fallback and the `Decision` reasons.
 - [ ] **T1.7** Ship the built-in `policies/default.yaml`, `strict.yaml` and `ci.yaml`.
 - [ ] **T1.8** Add the fixture suite `tests/policy-fixtures/*.yaml`, as triples of (policy, argv, expected decision), plus a table-driven runner. Future adapters must also pass these as conformance tests.
