@@ -173,7 +173,19 @@ impl Validator {
                         format!("{at}.commands[{j}][0]"),
                         "the executable must be a concrete name",
                     ),
-                    Some(_) => {}
+                    Some(exe) => {
+                        if rule.effect == Effect::Allow
+                            && crate::normalize::is_opaque_name(&crate::normalize::exe_name(exe))
+                        {
+                            self.warn(
+                                format!("{at}.commands[{j}][0]"),
+                                format!(
+                                    "`{exe}` is always opaque, so `allow` never applies to it; \
+                                     use `route` to a container instead"
+                                ),
+                            );
+                        }
+                    }
                 }
             }
             match rule.effect {
@@ -312,6 +324,17 @@ mod tests {
             all.iter()
                 .any(|i| i.path.ends_with("network") && i.severity == Severity::Warning)
         );
+    }
+
+    #[test]
+    fn allow_on_opaque_executable_warns() {
+        let p = parse("rules:\n  - { id: a, effect: allow, commands: [[bash]] }\n");
+        let all = validate(&p);
+        assert!(
+            all.iter()
+                .any(|i| i.severity == Severity::Warning && i.message.contains("always opaque"))
+        );
+        assert!(!has_errors(&all));
     }
 
     #[test]
