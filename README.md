@@ -9,7 +9,7 @@
 
 > Local-first for deterministic development; sandbox-first for untrusted execution; approval-gated for infrastructure mutation.
 
-Status: **v0.4.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
+Status: **v0.5.0, an early release.** It is not production-ready. See [docs/plan.md](docs/plan.md) for the roadmap.
 
 ## Quickstart
 

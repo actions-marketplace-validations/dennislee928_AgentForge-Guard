@@ -218,8 +218,8 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 ## Milestone v0.5 — Optional Native Helper & Mojo Plugin (experimental, gated)
 
 - [x] **T12.1** Build a benchmark and profiling harness for policy evaluation and executor overhead.
-- [ ] **T12.2** Build the Zig native helper (`native/zig-helper`) **only if** T12.1 or a platform feature (process telemetry, C ABI) justifies it. It is a separate optional binary and makes no policy decisions.
-- [ ] **T12.3** Build `plugins/mojo-compute` as an experimental, separately installed plugin for log and telemetry analysis. It runs through an authorized executor and gets no extra privileges.
+- [-] **T12.2** *(skipped per ADR 0007: benchmarks show no need)* Build the Zig native helper (`native/zig-helper`) **only if** T12.1 or a platform feature (process telemetry, C ABI) justifies it. It is a separate optional binary and makes no policy decisions.
+- [-] **T12.3** *(skipped per ADR 0007: benchmarks show no need)* Build `plugins/mojo-compute` as an experimental, separately installed plugin for log and telemetry analysis. It runs through an authorized executor and gets no extra privileges.
 - **Gate:** run the alignment check. If T12.1 shows no need, record that decision in an ADR and skip T12.2/T12.3.
 
 ## Milestone v1.0 — Stable
@@ -384,3 +384,4 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Not verified.** There has been no deployment to a real Cloudflare account. That needs an account and an irreversible migration, which is not something to do without the user. `wrangler deploy --dry-run` accepted the config and bundled the Worker. The live test is opt-in (`AFG_CF_LIVE_ENDPOINT`, `AFG_CLOUDFLARE_KEY`).
   - **Release.** Version `0.4.0`, fast-forward merged to `main`, tagged `v0.4.0` locally.
   - Next: milestone v0.5 (T12.1, the benchmark harness), on branch `milestone/v0.5`.
+- 2026-11-19 — **Phase 12 (v0.5) aligned.** T12.1 delivered std-timing benchmarks with no new dependencies (docs/benchmarks.md). Applying the plan's gate: afg's overhead is about 0.1–0.2 ms per command, under a quarter of a bare process spawn. T12.2 (Zig helper) and T12.3 (Mojo plugin) are **skipped and recorded in ADR 0007**, with explicit conditions for revisiting. Zig and Mojo remain supported as *target* languages. There is no code release for v0.5 beyond the benchmarks, so it is tagged `v0.5.0`, version `0.5.0`. Next: milestone v1.0 (T13.1).
