@@ -14,6 +14,7 @@ use clap::{Parser, Subcommand};
 mod backends;
 mod doctor;
 mod init;
+mod policy_cmd;
 mod project;
 
 pub const POLICY_FILE: &str = "agentforge.yaml";
@@ -40,6 +41,9 @@ enum Command {
     Init(init::InitArgs),
     /// Show detected projects, policy decisions, backend status and risks.
     Doctor(doctor::DoctorArgs),
+    /// Explain decisions, validate a policy or print its schema.
+    #[command(subcommand)]
+    Policy(policy_cmd::PolicyCommand),
 }
 
 fn main() -> ExitCode {
@@ -57,6 +61,7 @@ fn main() -> ExitCode {
     let result = match cli.command {
         Command::Init(a) => init::run(a),
         Command::Doctor(a) => rt.block_on(doctor::run(a)),
+        Command::Policy(c) => policy_cmd::run(c),
     };
     match result {
         Ok(code) => code,

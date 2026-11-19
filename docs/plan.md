@@ -159,7 +159,7 @@ Working rules for execution:
 ### Phase 5 — CLI (`afg-cli`)
 - [x] **T5.1** Write `afg init`. It writes `agentforge.yaml` from the detection results and the default policy. It never downloads or runs anything, and it refuses to overwrite an existing file without `--force`.
 - [x] **T5.2** Write `afg doctor`: the detected stacks and agents, risks, backend availability, and validation of the policy. It supports `--json`.
-- [ ] **T5.3** Write `afg policy explain -- <argv>` (decision, matched rule, reasons) and `afg policy validate`.
+- [x] **T5.3** Write `afg policy explain -- <argv>` (decision, matched rule, reasons) and `afg policy validate`.
 - [ ] **T5.4** Write `afg run [--isolation local|container] -- <argv>`. It goes evaluate → approval → route → execute → audit. Its exit code passes through, and denials use exit code 126.
 - [ ] **T5.5** Write the approval flow. It prompts on `/dev/tty` with the exact argv, cwd and backend. With no TTY, the command is denied. It never reads the approval from stdin.
 - [ ] **T5.6** Write `afg audit tail` and `afg audit show <id>`.
