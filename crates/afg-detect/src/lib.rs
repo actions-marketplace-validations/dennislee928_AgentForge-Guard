@@ -8,13 +8,13 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 
 pub mod agents;
-pub mod go;
 pub mod node;
+pub mod profile;
 pub mod risks;
 pub mod rust;
 
 /// Trust tier of a suggested command (docs/threat-model.md).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, serde::Deserialize)]
 pub enum Tier {
     /// Read-only.
     T0,
@@ -26,7 +26,7 @@ pub enum Tier {
     T3,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum StackKind {
     Go,
@@ -101,11 +101,13 @@ pub const SKIP_DIRS: &[&str] = &[
 pub const MAX_DEPTH: usize = 6;
 
 pub fn default_detectors() -> Vec<Box<dyn Detector>> {
-    vec![
-        Box::new(go::GoDetector),
-        Box::new(rust::RustDetector),
-        Box::new(node::NodeDetector),
-    ]
+    let mut v: Vec<Box<dyn Detector>> = profile::builtin_profiles()
+        .into_iter()
+        .map(|p| Box::new(profile::ProfileDetector(p)) as Box<dyn Detector>)
+        .collect();
+    v.push(Box::new(rust::RustDetector));
+    v.push(Box::new(node::NodeDetector));
+    v
 }
 
 /// Everything `afg doctor` and `afg init` need to know about a repository.

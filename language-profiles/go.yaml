@@ -1,0 +1,12 @@
+# Go modules and workspaces. Detection reads files only (it never runs go).
+kind: go
+markers: [go.mod, go.work]
+traits:
+  workspace: go.work
+coversChildrenIf: workspace
+commands:
+  - { tier: T0, argv: [go, list, ./...], purpose: list packages }
+  - { tier: T1, argv: [go, build, ./...], purpose: build }
+  - { tier: T1, argv: [go, vet, ./...], purpose: static checks }
+  - { tier: T1, argv: [go, test, ./...], purpose: tests }
+  - { tier: T2, argv: [go, mod, download], purpose: fetch dependencies }
