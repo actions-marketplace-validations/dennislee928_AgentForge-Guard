@@ -338,6 +338,13 @@ pub fn normalize(argv: &[String], env: &Env<'_>) -> Normalized {
             break;
         };
         let name = exe_name(arg0);
+        if name == "afg" {
+            out.forbidden = Some(
+                "afg cannot be run through afg; approvals and policy changes must come from a human".into(),
+            );
+            out.name = name;
+            return out;
+        }
         if PRIVILEGE.contains(&name.as_str()) {
             out.forbidden = Some(format!(
                 "privilege escalation via `{name}` is never allowed"
@@ -659,6 +666,16 @@ mod tests {
         assert!(norm(&["env", "doas", "ls"]).forbidden.is_some());
         assert!(
             norm(&["nice", "-n", "5", "/usr/bin/sudo", "ls"])
+                .forbidden
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn afg_cannot_run_itself() {
+        assert!(norm(&["afg", "approve", "x"]).forbidden.is_some());
+        assert!(
+            norm(&["env", "/usr/local/bin/afg", "approve", "x"])
                 .forbidden
                 .is_some()
         );

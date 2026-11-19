@@ -78,3 +78,7 @@ cases:
   - { argv: [time, -p, kubectl, delete, pod, x], expect: deny, rule: destructive-operations }
   - { argv: [command, --, terraform, destroy], expect: deny, rule: destructive-operations }
   - { argv: [timeout, -k, "5", "30", helm, uninstall, x], expect: deny, rule: destructive-operations }
+  # 9. Self-approval: afg can never be run through afg.
+  - { argv: [afg, approve, "0123"], expect: deny, rule: "builtin:forbidden" }
+  - { argv: [nohup, afg, approve, "--yes", "0123"], expect: deny, rule: "builtin:forbidden" }
+  - { argv: [cat, $HOME/.config/agentforge/approval.key], expect: deny, rule: "builtin:protected-path" }

@@ -19,6 +19,7 @@ pub const DEFAULT_HOME_PATHS: &[&str] = &[
     ".docker",
     ".config/gcloud",
     ".config/gh",
+    ".config/agentforge",
     ".netrc",
     ".git-credentials",
     ".npmrc",

@@ -8,8 +8,8 @@
 //! setting it is never a bypass. CI and tests use it.
 //!
 //! Limitation (docs/security-boundaries.md): if an agent drives its own
-//! pseudo-terminal, it controls `/dev/tty` too. Signed out-of-band approval
-//! tokens are planned for v0.2.
+//! pseudo-terminal, it controls `/dev/tty` too. Without a terminal, use the
+//! out-of-band tokens in `tokens.rs` (`afg approve`).
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
@@ -37,6 +37,18 @@ impl Outcome {
             Outcome::Approved => "approved",
             Outcome::Refused { reason, .. } => reason,
         }
+    }
+
+    /// True when no human channel was available (no terminal, or
+    /// `AFG_NO_TTY`), as opposed to an explicit refusal.
+    pub fn no_terminal(&self) -> bool {
+        matches!(
+            self,
+            Outcome::Refused {
+                channel: "none",
+                ..
+            }
+        )
     }
 
     pub fn record(&self) -> ApprovalRecord {

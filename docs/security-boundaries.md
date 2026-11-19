@@ -43,7 +43,12 @@ A remote or container sandbox cannot read host secrets **unless they are sent in
 
 ## Known limitations (v0.1)
 
-- **Approval via the terminal.** `require-approval` reads `yes` from `/dev/tty`, never from stdin, and refuses when there is no controlling terminal or when `AFG_NO_TTY` is set. A process that controls a **pseudo-terminal**, such as an agent that allocates a PTY or `script(1)`, can answer the prompt itself. Signed, single-use approval tokens issued from a separate terminal are planned (T7.4). Until then, don't treat `require-approval` as a boundary against an agent that has PTY access. Use `deny` for operations that must never come from an agent.
+- **Approval via the terminal.** `require-approval` reads `yes` from `/dev/tty`, never from stdin. A process that controls a **pseudo-terminal**, such as an agent that allocates a PTY or `script(1)`, can answer that prompt itself.
+- **Out-of-band approval.** When there is no terminal, `afg run` records a pending request and exits 126. A human then runs `afg approve <id>` in their own terminal, which writes a single-use HMAC token. The token is bound to the exact argv, cwd, backend, rule and policy hash, and expires after 15 minutes. An agent can't approve its own request through afg, because:
+  - `afg` can never be run through `afg` (a built-in forbidden rule, in both managed mode and the hook);
+  - the key directory `~/.config/agentforge` is a protected path.
+
+  An agent that can run arbitrary processes outside afg can still do anything the user can, including running `afg approve`. In that setting, use `deny` for operations that must never come from an agent.
 - **Redaction** is pattern-based and best effort. Environment values are never recorded, and command output is stored only as a length and a SHA-256.
 - **Container runs work on a copy.** Writes inside the container are discarded. Gitignored and protected files are absent, so a script that needs them fails rather than leaking them.
 - **Container images.** Images are referenced by tag and pulled when missing. Pin `image@sha256:…` in production policies.

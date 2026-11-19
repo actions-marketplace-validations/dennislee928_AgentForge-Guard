@@ -442,3 +442,66 @@ fn claude_posttool_formats_allowed_files_only() {
         .success();
     assert_eq!(std::fs::read_to_string(outside.path()).unwrap(), messy);
 }
+
+#[test]
+fn out_of_band_approval_tokens() {
+    let r = Repo::initialized();
+    let home = tempfile::tempdir().unwrap();
+    let with_home = |args: &[&str]| {
+        let mut c = r.afg();
+        c.env("HOME", home.path()).args(args);
+        c
+    };
+    // `git push` needs approval; `--dry-run` with no remote fails harmlessly once approved.
+    let cmd = ["run", "--", "git", "push", "--dry-run"];
+    let out = with_home(&cmd).output().unwrap();
+    assert_eq!(out.status.code(), Some(126));
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let id = stderr
+        .split("afg approve ")
+        .nth(1)
+        .unwrap()
+        .split('`')
+        .next()
+        .unwrap()
+        .to_owned();
+
+    // The agent cannot approve through afg itself, in managed or hook mode.
+    with_home(&["run", "--", "afg", "approve", "--yes", &id])
+        .assert()
+        .code(126);
+    assert_eq!(
+        decision(&pretool(&r, &format!("afg approve --yes {id}"), &[])),
+        "deny"
+    );
+
+    // A different command is not covered by the approval.
+    with_home(&["approve", "--yes", &id]).assert().success();
+    with_home(&["run", "--", "git", "push", "--force"])
+        .assert()
+        .code(126);
+    with_home(&["run", "--", "git", "push", "origin"])
+        .assert()
+        .code(126);
+
+    // The exact command runs once, then the token is gone.
+    let out = with_home(&cmd).output().unwrap();
+    assert_ne!(
+        out.status.code(),
+        Some(126),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let a = r.last_audit();
+    assert_eq!(a["approval"]["approved"], true);
+    assert!(
+        a["approval"]["channel"]
+            .as_str()
+            .unwrap()
+            .starts_with("token:")
+    );
+    with_home(&cmd).assert().code(126);
+
+    with_home(&["approve"]).assert().success();
+    with_home(&["approve", "--yes", "../../x"]).assert().code(2);
+}

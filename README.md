@@ -77,7 +77,7 @@ These are **not** equivalent levels of protection. See [docs/security-boundaries
 Read these before relying on afg:
 
 - **Prompt instructions are not a security boundary**, and neither is argv matching. Allowing `go test` or `cargo test` lets arbitrary test code run with your privileges.
-- **Approval is read from the controlling terminal.** A process that drives its own pseudo-terminal can answer the prompt. Out-of-band approval tokens are planned for v0.2 (T7.4).
+- **Approval is read from the controlling terminal**, or comes from a single-use `afg approve <id>` token. A process that drives its own pseudo-terminal, or that runs outside afg, can approve as the user. Use `deny` for operations an agent must never trigger.
 - **Redaction is pattern-based and best effort.** Environment *values* are never recorded, and output is stored only as a length and a SHA-256.
 - **Docker isolation is only as strong as the Docker runtime and kernel.** Pin images by digest.
 - **Agents that don't use `afg` are not affected by it.** Agent-level read rules and OS sandboxes are still needed.

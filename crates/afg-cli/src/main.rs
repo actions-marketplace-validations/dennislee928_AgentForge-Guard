@@ -13,6 +13,7 @@ use clap::{Parser, Subcommand};
 
 mod agents;
 mod approval;
+mod approve_cmd;
 mod audit_cmd;
 mod backends;
 mod doctor;
@@ -21,6 +22,7 @@ mod init;
 mod policy_cmd;
 mod project;
 mod run;
+mod tokens;
 
 pub const POLICY_FILE: &str = "agentforge.yaml";
 
@@ -60,6 +62,8 @@ enum Command {
     /// Generate coding-agent configuration from the policy.
     #[command(subcommand)]
     Agents(agents::AgentsCommand),
+    /// Approve a pending `require-approval` request (run by a human).
+    Approve(approve_cmd::ApproveArgs),
 }
 
 fn main() -> ExitCode {
@@ -82,6 +86,7 @@ fn main() -> ExitCode {
         Command::Audit(c) => audit_cmd::run(c),
         Command::Hook(c) => rt.block_on(hook::run(c)),
         Command::Agents(c) => agents::run(c),
+        Command::Approve(a) => approve_cmd::run(a),
     };
     match result {
         Ok(code) => code,

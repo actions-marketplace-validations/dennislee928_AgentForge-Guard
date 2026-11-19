@@ -12,13 +12,14 @@ use afg_executor::pin::pin_request_files;
 use afg_executor::{
     Captured, ExecutionError, ExecutionRequest, ExecutionResult, Executor, LocalExecutor,
 };
-use afg_report::audit::{ExecutionRecord, StreamRecord, new_id};
+use afg_report::audit::{ApprovalRecord, ExecutionRecord, StreamRecord, new_id};
 use afg_report::{AuditLog, AuditRecord};
 use anyhow::Context;
 
 use crate::backends::{docker_executor, host_env};
 use crate::policy_cmd::{Isolation, quote_argv};
 use crate::project::{self, home_dir};
+use crate::tokens;
 use crate::{EXIT_DENIED, EXIT_EXEC_ERROR, EXIT_TIMEOUT};
 
 /// Exit code when the executable does not exist (shell convention).
@@ -71,12 +72,40 @@ pub async fn run(a: RunArgs) -> anyhow::Result<ExitCode> {
             return Ok(ExitCode::from(EXIT_DENIED));
         }
         Effect::RequireApproval => {
-            let outcome = crate::approval::request(&d, &cwd);
-            rec.approval = Some(outcome.record());
-            if !outcome.approved() {
-                eprintln!("afg: not approved: {}", outcome.reason());
-                audit.append(&rec)?;
-                return Ok(ExitCode::from(EXIT_DENIED));
+            let dir = tokens::approvals_dir(&p.root, &policy.audit.dir);
+            let digest = tokens::decision_digest(&d, &cwd);
+            if let Some(token) = tokens::consume(&dir, home_dir().as_deref(), &digest) {
+                rec.approval = Some(ApprovalRecord {
+                    approved: true,
+                    channel: format!("token:{token}"),
+                });
+            } else {
+                let outcome = crate::approval::request(&d, &cwd);
+                rec.approval = Some(outcome.record());
+                if !outcome.approved() {
+                    eprintln!("afg: not approved: {}", outcome.reason());
+                    if outcome.no_terminal() {
+                        tokens::write_pending(
+                            &dir,
+                            &tokens::Pending {
+                                id: rec.id.clone(),
+                                digest,
+                                argv: d.normalized.original.clone(),
+                                cwd: cwd.display().to_string(),
+                                backend: d.backend.map(|b| b.to_string()).unwrap_or_default(),
+                                rule_id: d.rule_id.clone(),
+                                policy_hash: d.policy_hash.clone(),
+                                created_unix: tokens::now_unix(),
+                            },
+                        )?;
+                        eprintln!(
+                            "afg: a human can approve this in their own terminal with `afg approve {}`, then re-run the same command",
+                            rec.id
+                        );
+                    }
+                    audit.append(&rec)?;
+                    return Ok(ExitCode::from(EXIT_DENIED));
+                }
             }
         }
         Effect::Allow | Effect::Route => {}
