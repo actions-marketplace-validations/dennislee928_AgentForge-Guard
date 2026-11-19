@@ -183,6 +183,7 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 - [ ] **T7.1** Write `afg hook claude-pretool`. It reads the PreToolUse JSON from stdin, evaluates `Bash` commands with the same engine, and returns allow, deny or ask. Opaque shell strings are tokenized conservatively, and anything ambiguous returns deny or ask.
 - [ ] **T7.2** Write the PostToolUse formatter hook, which runs after an Edit or Write operation. It is documented as running after that tool operation, not as an "onSave" event.
 - [ ] **T7.3** Write `afg agents sync claude`. It generates the `.claude/settings.json` permission rules (allow/ask/deny, plus Read deny rules for protected paths) and the hook registration, and inserts a `CLAUDE.md` section between markers. The command is idempotent.
+- [ ] **T7.4** Add out-of-band approval tokens. `afg run` prints a pending decision id, and `afg approve <id>` (run by a human in another terminal) writes a signed, single-use token bound to the decision hash and argv. This closes the PTY approval gap found in Phase 5.
 ### Phase 8 — Codex adapter (`adapters/codex/`)
 - [ ] **T8.1** Write `afg agents sync codex`. It inserts an `AGENTS.md` section between markers and generates recommended `.codex/config.toml` sandbox and approval settings as guidance.
 - [ ] **T8.2** Check that `CLAUDE.md` and `AGENTS.md` are generated from one template, with a snapshot test.
@@ -291,3 +292,14 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Redaction is applied in `AuditLog::append`**, so callers can't forget it. It also scrubs reasons and errors, since they may quote argv values.
   - **Limitation.** Redaction is pattern-based and best effort. Environment values are never recorded, and this must be stated in `docs/security-boundaries.md` (T6.3).
   - No scope drift. Next: Phase 5 (T5.1). T5.1 must also close the Phase 2 detection/policy gap.
+- 2026-11-19 — **Phase 5 aligned.** Gate passed: 132 tests, plus 11 Docker tests that passed with `--ignored`, including the untrusted-script container demo run through the real CLI. Deviations and notes:
+  - **Extra commands.** `afg policy schema`, `afg init --template/--dry-run`, and `afg run --quiet`.
+  - **Exit codes.** 0 or the child's own code, 2 for config errors, 124 for a timeout, 125 for an exec error, 126 for denied, not approved or an integrity failure, and 127 for not found.
+  - **Approval channel.** It is `/dev/tty` only, and only an exact `yes` approves. `AFG_NO_TTY` can only force a refusal.
+  - **Security limitation, verified by hand.** A process that controls a pseudo-terminal (for example `script`, or an agent that allocates a PTY) *can* answer the prompt. Tasks for v0.2:
+    - Add signed, out-of-band, one-time approval tokens: `afg approve <id>` from a separate terminal, bound to the decision hash. **Added to Phase 7 as T7.4.**
+    - Until then, `docs/security-boundaries.md` (T6.3) must state the limitation.
+  - **Phase 2 gap closed.** `afg init` generates `detected-validation` and `detected-dependencies` rules, and a consistency test enforces the T0/T1/T2 rule.
+  - **Observation.** `git --version` is denied, because the default policy only allows specific git subcommands. That is fail-closed by design; users can add rules.
+  - **Audit.** If the audit log can't be opened, `afg run` refuses to execute. If writing the final record fails, it exits 125.
+  - No scope drift. Next: Phase 6 (T6.1).
