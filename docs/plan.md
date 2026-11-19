@@ -270,3 +270,18 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
   - **Limitation.** The risk detector reports secret-like files that are *present*, not ones that are *committed*, because detection never runs `git`. The message says so.
   - **Dependency.** `afg-detect` depends on `afg-core` only to reuse the protected-file globs. It contains no policy logic, so ADR 0002 holds.
   - No scope drift. Next: Phase 3 (T3.1).
+- 2026-11-19 — **Phase 3 aligned.** Gate passed: 104 tests, plus 10 Docker isolation tests that passed with `--ignored` against Docker 29.3.1 (linux/arm64, Docker Desktop). No `afg-` containers were left behind. Deviations and notes:
+  - **Pinning landed early.** The pinning primitives (`pin.rs`) came with T3.1 because `ExecutionRequest` carries them. T3.5 wired the verification into both backends.
+  - **Shared spawning.** Process spawning lives in `process.rs` and is shared by both backends: no shell, cleared environment, closed stdin, process group killed after exit or timeout.
+  - **Docker hardening beyond the plan.**
+    - `--entrypoint=argv[0]`, so an image's ENTRYPOINT can't wrap the command in a shell.
+    - `--init`.
+    - `--memory-swap` equal to `--memory`.
+    - `HOME=/tmp`.
+    - Env values reach the container through the docker CLI's environment (`--env NAME`), so they never show on a command line.
+    - Every run ends with `docker rm -f`, which covers timeouts.
+  - **Snapshot walking.** Snapshots use the `ignore` crate instead of `git ls-files`, because git can run programs configured by the repository (fsmonitor, hooks). Changes made inside the container are discarded. The README must say so (T6.3).
+  - **Test fix.** The network test originally asserted that `/sys/class/net` contains only `lo`. That fails on Docker Desktop's kernel, which lists inert tunnel devices. It now asserts that there are no IPv4 or IPv6 routes and that egress fails, which still catches any real connectivity.
+  - **Open item.** The image is a mutable tag (`debian:stable-slim`) and is pulled when missing. Recommend pinning a digest (`image@sha256:…`) in `docs/policy-reference.md` (T6.3), and consider a `pull: never` option in v0.2.
+  - **Open item.** The CLI (T5.4) must map policy settings onto executor requests: the env allowlist from `backends.*.env`, the timeout and the limits. It must also pin the program and script arguments when the decision is made, via `pin::pin_request_files`.
+  - No scope drift. Next: Phase 4 (T4.1).
