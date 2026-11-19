@@ -59,3 +59,51 @@ pub fn host_env(names: &[String]) -> Vec<(String, String)> {
         .filter_map(|k| std::env::var(k).ok().map(|v| (k.clone(), v)))
         .collect()
 }
+
+/// Load the Cloudflare signing key: from the policy's `keyEnv` variable, or
+/// from `~/.config/agentforge/cloudflare.key`.
+pub fn cloudflare_key(policy: &Policy, home: Option<&Path>) -> anyhow::Result<Vec<u8>> {
+    let c = &policy.execution.backends.cloudflare;
+    let hex = match std::env::var(&c.key_env) {
+        Ok(v) => v,
+        Err(_) => {
+            let p = home
+                .context("no home directory")?
+                .join(".config/agentforge/cloudflare.key");
+            std::fs::read_to_string(&p).with_context(|| {
+                format!(
+                    "no Cloudflare key: set {} or create {}",
+                    c.key_env,
+                    p.display()
+                )
+            })?
+        }
+    };
+    Ok(afg_executor::cloudflare::parse_key(&hex)?)
+}
+
+pub fn cloudflare_executor(
+    policy: &Policy,
+    root: &Path,
+    home: Option<&Path>,
+) -> anyhow::Result<afg_executor::CloudflareExecutor> {
+    let c = &policy.execution.backends.cloudflare;
+    let cfg = afg_executor::CloudflareConfig {
+        endpoint: c
+            .endpoint
+            .clone()
+            .context("execution.backends.cloudflare.endpoint is not set")?,
+        key: cloudflare_key(policy, home)?,
+        network: match c.network {
+            afg_core::policy::Network::None => NetworkPolicy::None,
+            afg_core::policy::Network::Bridge => NetworkPolicy::Bridge,
+        },
+        max_upload_bytes: c.max_upload_mb.saturating_mul(1024 * 1024),
+        snapshot: SnapshotOptions {
+            protected: ProtectedPaths::new(home, root, &policy.protected_paths),
+            max_total_bytes: SNAPSHOT_MAX_BYTES,
+            max_files: SNAPSHOT_MAX_FILES,
+        },
+    };
+    Ok(afg_executor::CloudflareExecutor::new(cfg)?)
+}

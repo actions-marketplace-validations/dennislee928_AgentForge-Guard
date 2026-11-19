@@ -10,12 +10,14 @@ use std::time::Duration;
 use serde::Serialize;
 
 pub mod capture;
+pub mod cloudflare;
 pub mod docker;
 pub mod local;
 pub mod pin;
 pub mod process;
 pub mod snapshot;
 
+pub use cloudflare::{CloudflareConfig, CloudflareExecutor};
 pub use docker::{DockerConfig, DockerExecutor};
 pub use local::LocalExecutor;
 pub use pin::PinnedFile;

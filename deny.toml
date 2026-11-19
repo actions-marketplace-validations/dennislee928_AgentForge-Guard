@@ -19,3 +19,13 @@ allow-wildcard-paths = true
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
+
+# Mozilla CA root data used by rustls (ureq, for the Cloudflare backend).
+# CDLA-Permissive-2.0 is a permissive data license; allowed for these crates only.
+[[licenses.exceptions]]
+crate = "webpki-root-certs"
+allow = ["CDLA-Permissive-2.0"]
+
+[[licenses.exceptions]]
+crate = "webpki-roots"
+allow = ["CDLA-Permissive-2.0"]

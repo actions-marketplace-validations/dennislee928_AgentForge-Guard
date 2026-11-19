@@ -27,7 +27,13 @@
       "default": {
         "backends": {
           "cloudflare": {
-            "enabled": false
+            "enabled": false,
+            "env": [],
+            "keyEnv": "AFG_CLOUDFLARE_KEY",
+            "maxRunsPerHour": 60,
+            "maxUploadMb": 64,
+            "network": "none",
+            "timeoutSeconds": 300
           },
           "container": {
             "cpus": 2.0,
@@ -139,7 +145,13 @@
         "cloudflare": {
           "$ref": "#/$defs/CloudflareBackend",
           "default": {
-            "enabled": false
+            "enabled": false,
+            "env": [],
+            "keyEnv": "AFG_CLOUDFLARE_KEY",
+            "maxRunsPerHour": 60,
+            "maxUploadMb": 64,
+            "network": "none",
+            "timeoutSeconds": 300
           }
         },
         "container": {
@@ -180,6 +192,50 @@
         "enabled": {
           "type": "boolean",
           "default": false
+        },
+        "endpoint": {
+          "description": "The Worker URL from `packages/cloudflare-adapter`. It must be https,\nexcept for loopback addresses during tests.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "env": {
+          "description": "Host variable names to pass into the sandbox.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "keyEnv": {
+          "description": "The environment variable that holds the hex signing key. If it is\nunset, `~/.config/agentforge/cloudflare.key` is read.",
+          "type": "string",
+          "default": "AFG_CLOUDFLARE_KEY"
+        },
+        "maxRunsPerHour": {
+          "description": "The maximum number of Cloudflare runs per rolling hour, counted from the audit log.",
+          "type": "integer",
+          "format": "uint64",
+          "default": 60,
+          "minimum": 0
+        },
+        "maxUploadMb": {
+          "description": "The maximum size of the uploaded snapshot archive (a cost and safety cap).",
+          "type": "integer",
+          "format": "uint64",
+          "default": 64,
+          "minimum": 0
+        },
+        "network": {
+          "$ref": "#/$defs/Network",
+          "default": "none"
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 300,
+          "minimum": 0
         }
       },
       "additionalProperties": false
@@ -254,7 +310,13 @@
           "$ref": "#/$defs/Backends",
           "default": {
             "cloudflare": {
-              "enabled": false
+              "enabled": false,
+              "env": [],
+              "keyEnv": "AFG_CLOUDFLARE_KEY",
+              "maxRunsPerHour": 60,
+              "maxUploadMb": 64,
+              "network": "none",
+              "timeoutSeconds": 300
             },
             "container": {
               "cpus": 2.0,

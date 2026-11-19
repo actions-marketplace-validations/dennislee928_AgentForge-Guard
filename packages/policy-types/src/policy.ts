@@ -60,6 +60,30 @@ export interface Backends {
 }
 export interface CloudflareBackend {
   enabled?: boolean;
+  /**
+   * The Worker URL from `packages/cloudflare-adapter`. It must be https,
+   * except for loopback addresses during tests.
+   */
+  endpoint?: string | null;
+  /**
+   * Host variable names to pass into the sandbox.
+   */
+  env?: string[];
+  /**
+   * The environment variable that holds the hex signing key. If it is
+   * unset, `~/.config/agentforge/cloudflare.key` is read.
+   */
+  keyEnv?: string;
+  /**
+   * The maximum number of Cloudflare runs per rolling hour, counted from the audit log.
+   */
+  maxRunsPerHour?: number;
+  /**
+   * The maximum size of the uploaded snapshot archive (a cost and safety cap).
+   */
+  maxUploadMb?: number;
+  network?: "none" | "bridge";
+  timeoutSeconds?: number;
 }
 export interface ContainerBackend {
   cpus?: number;

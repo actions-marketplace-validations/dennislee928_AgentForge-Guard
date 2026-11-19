@@ -117,11 +117,29 @@ pub async fn run(a: DoctorArgs) -> anyhow::Result<ExitCode> {
         available,
         detail,
     });
+    let cf = &b.cloudflare;
+    let (available, detail) = if !cf.enabled {
+        (false, "disabled in policy".to_owned())
+    } else {
+        match crate::backends::cloudflare_executor(policy, &p.root, home_dir().as_deref()) {
+            Ok(_) => (
+                true,
+                format!(
+                    "endpoint {}; key ok; network {:?}; upload cap {} MB",
+                    cf.endpoint.as_deref().unwrap_or("-"),
+                    cf.network,
+                    cf.max_upload_mb
+                )
+                .to_lowercase(),
+            ),
+            Err(e) => (false, format!("{e:#}")),
+        }
+    };
     backends.push(BackendStatus {
         backend: BackendKind::Cloudflare,
-        enabled: false,
-        available: false,
-        detail: "not implemented in this version".into(),
+        enabled: cf.enabled,
+        available,
+        detail,
     });
 
     let report = Report {

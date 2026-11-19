@@ -292,11 +292,57 @@ fn yes() -> bool {
     true
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CloudflareBackend {
     #[serde(default)]
     pub enabled: bool,
+    /// The Worker URL from `packages/cloudflare-adapter`. It must be https,
+    /// except for loopback addresses during tests.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub endpoint: Option<String>,
+    /// The environment variable that holds the hex signing key. If it is
+    /// unset, `~/.config/agentforge/cloudflare.key` is read.
+    #[serde(default = "default_cf_key_env")]
+    pub key_env: String,
+    #[serde(default)]
+    pub network: Network,
+    #[serde(default = "default_timeout")]
+    pub timeout_seconds: u64,
+    /// The maximum size of the uploaded snapshot archive (a cost and safety cap).
+    #[serde(default = "default_cf_upload")]
+    pub max_upload_mb: u64,
+    /// The maximum number of Cloudflare runs per rolling hour, counted from the audit log.
+    #[serde(default = "default_cf_runs")]
+    pub max_runs_per_hour: u64,
+    /// Host variable names to pass into the sandbox.
+    #[serde(default)]
+    pub env: Vec<String>,
+}
+
+impl Default for CloudflareBackend {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            endpoint: None,
+            key_env: default_cf_key_env(),
+            network: Network::None,
+            timeout_seconds: default_timeout(),
+            max_upload_mb: default_cf_upload(),
+            max_runs_per_hour: default_cf_runs(),
+            env: Vec::new(),
+        }
+    }
+}
+
+fn default_cf_key_env() -> String {
+    "AFG_CLOUDFLARE_KEY".into()
+}
+fn default_cf_upload() -> u64 {
+    64
+}
+fn default_cf_runs() -> u64 {
+    60
 }
 
 /// The effect a rule has when it matches.

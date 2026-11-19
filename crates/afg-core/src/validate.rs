@@ -33,7 +33,11 @@ impl std::fmt::Display for Issue {
 }
 
 /// Backends that this build can execute.
-pub const IMPLEMENTED_BACKENDS: &[BackendKind] = &[BackendKind::Local, BackendKind::Container];
+pub const IMPLEMENTED_BACKENDS: &[BackendKind] = &[
+    BackendKind::Local,
+    BackendKind::Container,
+    BackendKind::Cloudflare,
+];
 
 /// Return every issue found. The policy is usable only if there are no
 /// `Error` issues; see [`has_errors`].
@@ -41,6 +45,12 @@ pub fn validate(policy: &Policy) -> Vec<Issue> {
     let mut v = Validator::default();
     v.run(policy);
     v.issues
+}
+
+fn is_loopback_http(u: &str) -> bool {
+    ["http://127.0.0.1:", "http://localhost:", "http://[::1]:"]
+        .iter()
+        .any(|p| u.starts_with(p))
 }
 
 pub fn has_errors(issues: &[Issue]) -> bool {
@@ -92,11 +102,34 @@ impl Validator {
         if !b.local.enabled && !b.container.enabled {
             self.err("execution.backends", "at least one backend must be enabled");
         }
-        if b.cloudflare.enabled {
-            self.err(
-                "execution.backends.cloudflare.enabled",
-                "the cloudflare backend is not implemented in this version",
-            );
+        let cf = &b.cloudflare;
+        if cf.enabled {
+            match cf.endpoint.as_deref() {
+                None => self.err("execution.backends.cloudflare.endpoint", "required when the backend is enabled"),
+                Some(u) if !(u.starts_with("https://") || is_loopback_http(u)) => self.err(
+                    "execution.backends.cloudflare.endpoint",
+                    "must be an https:// URL (plain http is allowed only for loopback test servers)",
+                ),
+                Some(_) => {}
+            }
+            if cf.timeout_seconds == 0 || cf.timeout_seconds > 3600 {
+                self.err(
+                    "execution.backends.cloudflare.timeoutSeconds",
+                    "must be in 1..=3600",
+                );
+            }
+            if cf.max_upload_mb == 0 {
+                self.err(
+                    "execution.backends.cloudflare.maxUploadMb",
+                    "must be greater than 0",
+                );
+            }
+            if cf.network == Network::Bridge {
+                self.warn(
+                    "execution.backends.cloudflare.network",
+                    "`bridge` gives sandboxed code internet access",
+                );
+            }
         }
         self.check_backend(p, "execution.default", p.execution.default);
         if let Fallback::Route(kind) = p.execution.fallback {
@@ -283,9 +316,21 @@ mod tests {
     }
 
     #[test]
-    fn cloudflare_not_implemented() {
+    fn cloudflare_requires_https_endpoint() {
         let p = parse("execution: { backends: { cloudflare: { enabled: true } } }\n");
-        assert!(errors(&p).iter().any(|e| e.contains("not implemented")));
+        assert!(errors(&p).iter().any(|e| e.contains("endpoint: required")));
+        let p = parse(
+            "execution: { backends: { cloudflare: { enabled: true, endpoint: 'http://example.com' } } }\n",
+        );
+        assert!(errors(&p).iter().any(|e| e.contains("https")));
+        let p = parse(
+            "execution: { backends: { cloudflare: { enabled: true, endpoint: 'https://x.workers.dev' } } }\n",
+        );
+        assert!(errors(&p).is_empty());
+        let p = parse(
+            "execution: { backends: { cloudflare: { enabled: true, endpoint: 'http://127.0.0.1:8787' } } }\n",
+        );
+        assert!(errors(&p).is_empty());
     }
 
     #[test]

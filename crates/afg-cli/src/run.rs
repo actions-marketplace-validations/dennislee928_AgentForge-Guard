@@ -16,7 +16,7 @@ use afg_report::audit::{ApprovalRecord, ExecutionRecord, StreamRecord, new_id};
 use afg_report::{AuditLog, AuditRecord};
 use anyhow::Context;
 
-use crate::backends::{docker_executor, host_env};
+use crate::backends::{cloudflare_executor, docker_executor, host_env};
 use crate::policy_cmd::{Isolation, quote_argv};
 use crate::project::{self, home_dir};
 use crate::tokens;
@@ -201,9 +201,24 @@ async fn execute(
             };
             Ok(docker.execute(req).await?)
         }
-        BackendKind::Cloudflare => Err(RunError::Exec(ExecutionError::Unavailable(
-            "the cloudflare backend is not implemented in this version".into(),
-        ))),
+        BackendKind::Cloudflare => {
+            let cf = cloudflare_executor(policy, &p.root, home_dir().as_deref())
+                .map_err(RunError::Setup)?;
+            let c = &policy.execution.backends.cloudflare;
+            let req = ExecutionRequest {
+                id: id.to_owned(),
+                argv: n.inner_argv.clone(),
+                arg0: None,
+                cwd: n.cwd.clone(),
+                workspace_root: p.root.clone(),
+                env: host_env(&c.env),
+                timeout: Duration::from_secs(c.timeout_seconds),
+                pinned: pin_request_files(None, &n.args, cwd, &p.root),
+                stream: true,
+                capture_limit: CAPTURE_LIMIT,
+            };
+            Ok(cf.execute(req).await?)
+        }
     }
 }
 
