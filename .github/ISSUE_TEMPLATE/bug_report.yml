@@ -1,0 +1,22 @@
+name: Bug report
+description: Something does not work as documented. For security bypasses, use private vulnerability reporting instead (see SECURITY.md).
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes: { label: afg version, description: Output of `afg --version` }
+    validations: { required: true }
+  - type: input
+    id: env
+    attributes: { label: OS and Docker version }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Policy (or a minimal one), exact argv, working directory.
+      render: shell
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected vs. actual behavior }
+    validations: { required: true }

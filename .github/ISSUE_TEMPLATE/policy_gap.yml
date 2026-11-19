@@ -1,0 +1,14 @@
+name: Policy gap / false positive
+description: A legitimate command is denied, or a command is classified in a surprising way.
+labels: [policy]
+body:
+  - type: textarea
+    id: argv
+    attributes:
+      label: Command and `afg policy explain` output
+      render: shell
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes: { label: Why the decision should be different }
+    validations: { required: true }
