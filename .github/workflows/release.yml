@@ -85,7 +85,7 @@ jobs:
           cd dist
           for f in *; do cosign sign-blob --yes --bundle "$f.sigstore.json" "$f"; done
       - name: SLSA build provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: "dist/afg-*"
       - name: GitHub Release
