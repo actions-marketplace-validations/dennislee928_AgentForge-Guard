@@ -414,3 +414,9 @@ Users install a released binary without cloning the repository. Go users use the
     1. An independent security review, with a regression test for each finding.
     2. A first CI run on a real remote, confirming the Linux Docker suite, the Go/Zig live tests, `examples/zig-project`, the action, the security and release workflows, and the Windows build.
     3. An optional live Cloudflare deployment.
+- 2026-11-21 — **Distribution aligned (T14.1–T14.4).** Gate passed: 187 Rust tests, fmt, clippy, deny, `cargo package --workspace`; 6 npm packaging tests; 5 install-script tests; shellcheck and actionlint. Deviations and notes:
+  - **Go.** No Go module. Go's registry builds only Go source; Go users use `install.sh`.
+  - **Release blocker fixed.** `release.yml` used the retired `macos-13` runner, so no release could complete. It now uses `macos-15-intel`. No `v*` tag had been pushed yet, so no release run was affected.
+  - **Repository URL.** Metadata pointed to `github.com/agentforge-guard/agentforge-guard`, which isn't this repository. Now `github.com/dennislee928/AgentForge-Guard`; the Homebrew tap becomes `dennislee928/homebrew-tap`.
+  - **Not covered.** No prebuilt musl (Alpine) or Windows arm64 binaries; the npm launcher and `install.sh` say so and point to `cargo install`.
+  - **Publishing needs the owner.** crates.io and npm publish only when `CARGO_REGISTRY_TOKEN` and `NPM_TOKEN` are set; both registries can later switch to trusted publishing (OIDC) after the first manual-token release.
