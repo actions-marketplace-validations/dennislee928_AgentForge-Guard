@@ -13,11 +13,16 @@ Status: **v1.0.0-rc.1, a release candidate.** It is not yet production-ready: an
 
 ## Install
 
-```sh
-cargo install agentforge-guard                # from crates.io, once published; installs `afg`
-# or: download a signed binary from GitHub Releases (verify it with its .sigstore.json bundle)
-# or: brew install agentforge-guard/tap/afg   (once the tap exists; see packaging/homebrew)
-```
+Each method installs the `afg` command. While only release candidates exist, add the version (`@next` on npm, `--version 1.0.0-rc.1` for cargo, `AFG_VERSION=1.0.0-rc.1` for the script).
+
+| You have | Command |
+|---|---|
+| Node.js 18+ | `npm install -g agentforge-guard`, or run once with `npx agentforge-guard doctor` |
+| Rust | `cargo install agentforge-guard` |
+| Neither (Go, Python, ...) on macOS or Linux | `curl -fsSL https://github.com/dennislee928/AgentForge-Guard/releases/latest/download/install.sh \| sh` |
+| Windows without Node or Rust | the `.zip` from [GitHub Releases](https://github.com/dennislee928/AgentForge-Guard/releases) |
+
+Prebuilt binaries cover macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x64. The npm package runs the binary from a per-platform optional dependency; it downloads nothing at install time and runs no install scripts. `install.sh` checks the archive against `SHA256SUMS` and, if `cosign` is installed, its Sigstore signature (`AFG_REQUIRE_COSIGN=1` makes that mandatory). Every release file is signed with Sigstore and has SLSA build provenance; npm packages carry npm provenance. A Homebrew formula template is in [packaging/homebrew](packaging/homebrew).
 
 ## Commands
 
