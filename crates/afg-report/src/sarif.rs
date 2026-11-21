@@ -70,7 +70,7 @@ pub fn sarif(records: &[AuditRecord], policy_text: &str, policy_uri: &str) -> Va
                 "id": rule_id,
                 "name": rule_id.replace([':', '-'], "_"),
                 "shortDescription": { "text": format!("AgentForge Guard policy rule `{rule_id}`") },
-                "helpUri": "https://github.com/agentforge-guard/agentforge-guard/blob/main/docs/policy-reference.md",
+                "helpUri": "https://github.com/dennislee928/AgentForge-Guard/blob/main/docs/policy-reference.md",
             })
         });
         let argv = r
