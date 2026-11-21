@@ -242,6 +242,55 @@ Users install a released binary without cloning the repository. Go users use the
 - [x] **T14.4** Release workflow: publish the npm packages with provenance (prereleases under the `next` dist-tag), attach `install.sh`, and skip each registry when its token is missing. Update the README install section.
 - [x] **T14.5** npm package metadata for supply-chain scanners (Socket.dev): every platform package ships a README that names its target and explains how to verify the binary (provenance, `SHA256SUMS`, Sigstore); all manifests carry `keywords`, `author` and `bugs`. Released as `1.0.0-rc.2`.
 
+## Milestone v1.1 — Security Validation & Adoption
+
+Goal: every security claim maps to a reproducible test, a CI result and a stated security boundary, and is not only a demo. Ordered by priority.
+
+| Priority | Task | Outcome |
+|---|---|---|
+| P0 | T15.1 Security Validation Matrix in CI | Each scenario below has a named test that runs on every PR and is reported as a table |
+| P0 | T15.2 Reproducible isolation attack/defense matrix | Attacks run against afg and the sandbox in CI, with expected denials recorded |
+| P0 | T15.3 Independent security review and policy-bypass testing | External reviewer report; every finding becomes an adversarial fixture |
+| P1 | T15.4 Every release artifact installs and verifies | Post-release CI installs from npm, crates.io and install.sh, and verifies SHA256SUMS, cosign and SLSA provenance |
+| P1 | T15.5 3–5 external developers test and file issues | Tester guide, issue templates (bug, bypass report), feedback triaged |
+| P2 | T15.6 Real adoption dashboard | Scheduled job records npm, crates.io and release downloads, plus stars and issues |
+
+### Security Validation Matrix
+
+| # | Scenario | Expected | Existing test (reproducible) | CI job | Security boundary |
+|---|---|---|---|---|---|
+| 1 | Read `.env` or an SSH private key | Deny | `tests/adversarial/bypass.yaml` (builtin:protected-path) via `afg-core` `adversarial_cases_never_allow`; `afg-cli` `cli.rs` hook cases `cat .env` and Read `.env` | CI `test` | Policy engine (managed mode); in integration mode only what the agent sends to the hook |
+| 2 | Reach a protected path through a symlink | Deny | `bypass.yaml` `cat innocent.txt` → symlink to `~/.ssh/id_ed25519` (`policy_fixtures.rs`) | CI `test` | Path canonicalisation before matching |
+| 3 | Policy edited but not re-trusted | Deny | `cli.rs` `edited_policy_is_untrusted_until_a_human_re_trusts_it` | CI `test`, `demos` | Trust pin (hash) of the reviewed policy |
+| 4 | Run an untrusted shell script | Route to sandbox | `cli.rs` `untrusted_script_runs_in_container_without_host_secrets_or_network`; `scripts/ci-demos.sh` demo 3 | CI `demos` (Docker) | Docker sandbox: copied workspace, no secrets, no network |
+| 5 | Agent runs `terraform destroy` | Deny | `cli.rs` `terraform_destroy_is_denied_with_audit_evidence`; `ci-demos.sh` demo 2 | CI `test`, `demos` | Policy rule `destructive-operations`, audited |
+| 6 | `kubectl apply` without human approval | Deny / require approval | `cli.rs` `approval_without_a_terminal_is_refused`, `out_of_band_approval_tokens` | CI `test` | Approval from the controlling TTY or a single-use `afg approve` token bound to the argv |
+| 7 | Verified script modified before execution | TOCTOU detection | `afg-executor` `sandbox_isolation.rs` `swapped_script_is_rejected_before_the_container_starts` | CI `test -- --ignored` (Docker) | Pinned hashes re-checked just before exec |
+| 8 | Container tries to reach the network | Network blocked | `sandbox_isolation.rs` `no_network`; `cli.rs` scenario 4 | CI `test -- --ignored`, `demos` | `docker run --network none` |
+
+- [ ] **T15.1** Matrix as code: `docs/security-validation-matrix.md` generated from a list of scenario → test name, and a CI job that runs exactly those tests (`cargo test <name>`, including the `--ignored` Docker ones) and fails if any named test is missing, skipped or renamed. The job summary shows the table with ✅/❌ and the commit SHA.
+- [ ] **T15.2** Close matrix gaps with new adversarial cases, each written as a failing test first:
+  - TOCTOU on the **local** backend, not only Docker.
+  - `kubectl apply` approved on a TTY versus refused without one.
+  - Symlink and hard-link races during a run.
+  - Network egress over DNS and IPv6 inside the container.
+  - Protected paths reached through `/proc/self/root` or `..` traversal.
+  - Env-var smuggling (`env X=1`, `BASH_ENV`).
+  - The hook seeing a different command than the one that runs.
+- [ ] **T15.3** Independent review:
+  - Scope document listing the threat model, the matrix and known limitations.
+  - Engage a reviewer and record the report in `docs/security-review/`.
+  - Each finding becomes a fixture in `tests/adversarial/` plus a fix, and `SECURITY.md` is updated.
+  - This review gates **v1.0.0** (not an rc).
+- [ ] **T15.4** `verify-release.yml` (on `release: published` and weekly):
+  - On a matrix of macOS arm64 and x64, Linux x64 and arm64, and Windows: `npm i -g agentforge-guard@<v>`, `cargo install agentforge-guard --version <v>`, and `install.sh` with `AFG_REQUIRE_COSIGN=1`.
+  - `cosign verify-blob` on every archive, `gh attestation verify` for SLSA, and `npm audit signatures`.
+- [ ] **T15.5** External testing:
+  - `docs/testing-guide.md`, a 15-minute task list covering the 8 matrix scenarios on the tester's own repo.
+  - `.github/ISSUE_TEMPLATE/` with bug, bypass-report and feedback templates.
+  - Recruit 3–5 developers and track them in a pinned issue.
+- [ ] **T15.6** Adoption dashboard: a scheduled workflow appends npm, crates.io and GitHub-release download counts, stars, issues and external PRs to `metrics/adoption.jsonl` and renders a chart page. Real numbers only, no vanity metrics.
+
 ## Verification
 
 - **Every task:** `cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`.
@@ -422,3 +471,4 @@ Users install a released binary without cloning the repository. Go users use the
   - **Not covered.** No prebuilt musl (Alpine) or Windows arm64 binaries; the npm launcher and `install.sh` say so and point to `cargo install`.
   - **Publishing needs the owner.** crates.io and npm publish only when `CARGO_REGISTRY_TOKEN` and `NPM_TOKEN` are set; both registries can later switch to trusted publishing (OIDC) after the first manual-token release.
 - 2026-11-21 — **T14.5.** Socket.dev rated the rc.1 platform packages Quality 37 (no README, sparse metadata) and Supply Chain 51/69. README and metadata fix the quality signals. The remaining supply-chain alerts are inherent: platform packages exist to ship a native binary, and the launcher must spawn it (`spawnSync`, no shell). They are mitigated by npm provenance, `SHA256SUMS` and Sigstore, not removed.
+- 2026-11-22 — **Milestone v1.1 planned (Security Validation & Adoption).** Added the priorities P0–P2 and the Security Validation Matrix. All 8 scenarios already have a reproducible test; T15.1 makes them a named, enforced CI table, and T15.2 lists the gaps the current tests do not cover. External review (T15.3) gates v1.0.0.
