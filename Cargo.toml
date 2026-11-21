@@ -9,7 +9,7 @@ edition = "2024"
 rust-version = "1.89"
 license = "MIT OR Apache-2.0"
 
-repository = "https://github.com/agentforge-guard/agentforge-guard"
+repository = "https://github.com/dennislee928/AgentForge-Guard"
 keywords = ["ai-agents", "sandbox", "policy", "security", "cli"]
 categories = ["command-line-utilities", "development-tools"]
 

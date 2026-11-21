@@ -232,6 +232,15 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
 - [x] **T13.6** Run a documentation pass and set up a Homebrew tap.
 - **Gate:** run the alignment check and tag `v1.0.0`. Never claim production readiness without green isolation and bypass suites.
 
+## Milestone v1.0 — Distribution
+
+Users install a released binary without cloning the repository. Go users use the install script: Go's registry builds only Go source, and a Go wrapper that downloads a Rust binary was rejected as fragile.
+
+- [x] **T14.1** Point every repository, homepage, SARIF `helpUri` and Homebrew URL at `github.com/dennislee928/AgentForge-Guard`, and the tap at `dennislee928/homebrew-tap`.
+- [x] **T14.2** Add the npm package `agentforge-guard` (`npm i -g agentforge-guard`, `npx agentforge-guard`). A small launcher runs the binary from the matching optional per-platform package (`agentforge-guard-<os>-<cpu>`); it never downloads at install time and runs no install scripts. Test the platform resolution.
+- [x] **T14.3** Add `install.sh`. It picks the release archive for the OS and CPU, verifies it against `SHA256SUMS` (and the cosign bundle when `cosign` is installed), and installs `afg` into a user directory. It fails closed on any mismatch. Test it against a local fake release.
+- [x] **T14.4** Release workflow: publish the npm packages with provenance (prereleases under the `next` dist-tag), attach `install.sh`, and skip each registry when its token is missing. Update the README install section.
+
 ## Verification
 
 - **Every task:** `cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`.
@@ -405,3 +414,9 @@ The Claude Code hook JSON contract and the Codex config keys must be verified ag
     1. An independent security review, with a regression test for each finding.
     2. A first CI run on a real remote, confirming the Linux Docker suite, the Go/Zig live tests, `examples/zig-project`, the action, the security and release workflows, and the Windows build.
     3. An optional live Cloudflare deployment.
+- 2026-11-21 — **Distribution aligned (T14.1–T14.4).** Gate passed: 187 Rust tests, fmt, clippy, deny, `cargo package --workspace`; 6 npm packaging tests; 5 install-script tests; shellcheck and actionlint. Deviations and notes:
+  - **Go.** No Go module. Go's registry builds only Go source; Go users use `install.sh`.
+  - **Release blocker fixed.** `release.yml` used the retired `macos-13` runner, so no release could complete. It now uses `macos-15-intel`. No `v*` tag had been pushed yet, so no release run was affected.
+  - **Repository URL.** Metadata pointed to `github.com/agentforge-guard/agentforge-guard`, which isn't this repository. Now `github.com/dennislee928/AgentForge-Guard`; the Homebrew tap becomes `dennislee928/homebrew-tap`.
+  - **Not covered.** No prebuilt musl (Alpine) or Windows arm64 binaries; the npm launcher and `install.sh` say so and point to `cargo install`.
+  - **Publishing needs the owner.** crates.io and npm publish only when `CARGO_REGISTRY_TOKEN` and `NPM_TOKEN` are set; both registries can later switch to trusted publishing (OIDC) after the first manual-token release.
