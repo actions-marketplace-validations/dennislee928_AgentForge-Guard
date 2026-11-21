@@ -89,3 +89,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm -r run check
+      - name: npm distribution packaging
+        run: node --test packaging/npm/test/*.test.mjs

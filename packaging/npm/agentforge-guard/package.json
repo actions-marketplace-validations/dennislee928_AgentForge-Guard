@@ -1,0 +1,12 @@
+{
+  "name": "agentforge-guard",
+  "version": "0.0.0-dev",
+  "description": "AgentForge Guard (afg): a policy-driven execution guard for AI coding agents",
+  "license": "MIT OR Apache-2.0",
+  "homepage": "https://github.com/dennislee928/AgentForge-Guard",
+  "repository": { "type": "git", "url": "git+https://github.com/dennislee928/AgentForge-Guard.git" },
+  "bin": { "afg": "bin/afg.js", "agentforge-guard": "bin/afg.js" },
+  "files": ["bin/afg.js", "lib/platform.js", "README.md", "LICENSE-MIT", "LICENSE-APACHE"],
+  "engines": { "node": ">=18" },
+  "optionalDependencies": {}
+}
