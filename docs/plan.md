@@ -238,7 +238,7 @@ Users install a released binary without cloning the repository. Go users use the
 
 - [x] **T14.1** Point every repository, homepage, SARIF `helpUri` and Homebrew URL at `github.com/dennislee928/AgentForge-Guard`, and the tap at `dennislee928/homebrew-tap`.
 - [x] **T14.2** Add the npm package `agentforge-guard` (`npm i -g agentforge-guard`, `npx agentforge-guard`). A small launcher runs the binary from the matching optional per-platform package (`agentforge-guard-<os>-<cpu>`); it never downloads at install time and runs no install scripts. Test the platform resolution.
-- [ ] **T14.3** Add `install.sh`. It picks the release archive for the OS and CPU, verifies it against `SHA256SUMS` (and the cosign bundle when `cosign` is installed), and installs `afg` into a user directory. It fails closed on any mismatch. Test it against a local fake release.
+- [x] **T14.3** Add `install.sh`. It picks the release archive for the OS and CPU, verifies it against `SHA256SUMS` (and the cosign bundle when `cosign` is installed), and installs `afg` into a user directory. It fails closed on any mismatch. Test it against a local fake release.
 - [ ] **T14.4** Release workflow: publish the npm packages with provenance (prereleases under the `next` dist-tag), attach `install.sh`, and skip each registry when its token is missing. Update the README install section.
 
 ## Verification
