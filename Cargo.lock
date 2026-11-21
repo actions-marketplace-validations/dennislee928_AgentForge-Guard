@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "afg-core"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "indoc",
  "proptest",
@@ -18,7 +18,7 @@ dependencies = [
 
 [[package]]
 name = "afg-detect"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "afg-core",
  "serde",
@@ -29,7 +29,7 @@ dependencies = [
 
 [[package]]
 name = "afg-executor"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "afg-core",
  "base64",
@@ -48,7 +48,7 @@ dependencies = [
 
 [[package]]
 name = "afg-report"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "afg-core",
  "proptest",
@@ -61,7 +61,7 @@ dependencies = [
 
 [[package]]
 name = "agentforge-guard"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "afg-core",
  "afg-detect",

@@ -240,6 +240,7 @@ Users install a released binary without cloning the repository. Go users use the
 - [x] **T14.2** Add the npm package `agentforge-guard` (`npm i -g agentforge-guard`, `npx agentforge-guard`). A small launcher runs the binary from the matching optional per-platform package (`agentforge-guard-<os>-<cpu>`); it never downloads at install time and runs no install scripts. Test the platform resolution.
 - [x] **T14.3** Add `install.sh`. It picks the release archive for the OS and CPU, verifies it against `SHA256SUMS` (and the cosign bundle when `cosign` is installed), and installs `afg` into a user directory. It fails closed on any mismatch. Test it against a local fake release.
 - [x] **T14.4** Release workflow: publish the npm packages with provenance (prereleases under the `next` dist-tag), attach `install.sh`, and skip each registry when its token is missing. Update the README install section.
+- [x] **T14.5** npm package metadata for supply-chain scanners (Socket.dev): every platform package ships a README that names its target and explains how to verify the binary (provenance, `SHA256SUMS`, Sigstore); all manifests carry `keywords`, `author` and `bugs`. Released as `1.0.0-rc.2`.
 
 ## Verification
 
@@ -420,3 +421,4 @@ Users install a released binary without cloning the repository. Go users use the
   - **Repository URL.** Metadata pointed to `github.com/agentforge-guard/agentforge-guard`, which isn't this repository. Now `github.com/dennislee928/AgentForge-Guard`; the Homebrew tap becomes `dennislee928/homebrew-tap`.
   - **Not covered.** No prebuilt musl (Alpine) or Windows arm64 binaries; the npm launcher and `install.sh` say so and point to `cargo install`.
   - **Publishing needs the owner.** crates.io and npm publish only when `CARGO_REGISTRY_TOKEN` and `NPM_TOKEN` are set; both registries can later switch to trusted publishing (OIDC) after the first manual-token release.
+- 2026-11-21 — **T14.5.** Socket.dev rated the rc.1 platform packages Quality 37 (no README, sparse metadata) and Supply Chain 51/69. README and metadata fix the quality signals. The remaining supply-chain alerts are inherent: platform packages exist to ship a native binary, and the launcher must spawn it (`spawnSync`, no shell). They are mitigated by npm provenance, `SHA256SUMS` and Sigstore, not removed.

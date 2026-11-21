@@ -33,6 +33,40 @@ function sums(dist) {
   return map;
 }
 
+// The README shipped in each platform package: what the binary is, and how to check it.
+function platformReadme(name, target, version, repo) {
+  const tag = `v${version}`;
+  return `# ${name}
+
+The prebuilt \`afg\` binary of [AgentForge Guard](${repo}) for \`${target}\`.
+
+**Do not install this package directly.** Install \`agentforge-guard\` instead. Its launcher picks the
+right platform package through \`optionalDependencies\`; nothing is downloaded or run at install time.
+
+\`\`\`sh
+npm install -g agentforge-guard
+\`\`\`
+
+## Contents
+
+- \`bin/\`: the \`afg\` executable, built from the tagged source by the
+  [release workflow](${repo}/blob/${tag}/.github/workflows/release.yml).
+  This package exists to ship that native binary; it has no JavaScript and no install scripts.
+- \`LICENSE-MIT\`, \`LICENSE-APACHE\`: dual licensed, MIT OR Apache-2.0.
+
+## Verifying the binary
+
+- This package is published with [npm provenance](https://docs.npmjs.com/generating-provenance-statements),
+  which links it to the GitHub Actions run that built it: \`npm audit signatures\`.
+- The binary is the one in \`afg-${tag}-${target}\` from the
+  [${tag} GitHub Release](${repo}/releases/tag/${tag}). That archive is listed in the release's \`SHA256SUMS\`
+  and signed with Sigstore (\`<archive>.sigstore.json\`, workflow identity
+  \`${repo}/.github/workflows/release.yml@refs/tags/v*\`).
+
+Source, documentation and security policy: ${repo}
+`;
+}
+
 export function assemble(dist, version, out) {
   if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) throw new Error(`bad version ${version}`);
   const expected = sums(dist);
@@ -65,6 +99,7 @@ export function assemble(dist, version, out) {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
     for (const f of ['LICENSE-MIT', 'LICENSE-APACHE']) fs.copyFileSync(path.join(repoRoot, f), path.join(pkgDir, f));
+    fs.writeFileSync(path.join(pkgDir, 'README.md'), platformReadme(name, target, version, main.homepage));
     fs.writeFileSync(
       path.join(pkgDir, 'package.json'),
       JSON.stringify(
@@ -72,12 +107,15 @@ export function assemble(dist, version, out) {
           name,
           version,
           description: `The ${target} binary for agentforge-guard. Install agentforge-guard instead.`,
+          keywords: main.keywords,
+          author: main.author,
           license: main.license,
           homepage: main.homepage,
           repository: main.repository,
+          bugs: main.bugs,
           os: [os],
           cpu: [cpu],
-          files: ['bin', 'LICENSE-MIT', 'LICENSE-APACHE'],
+          files: ['bin', 'README.md', 'LICENSE-MIT', 'LICENSE-APACHE'],
           preferUnplugged: true,
         },
         null,
