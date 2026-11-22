@@ -148,7 +148,22 @@ jobs:
             fi
             npm publish "$1" --provenance --access public --tag "$tag"
           }
+          # npm gives a package's first publish the `latest` tag, and prereleases go to
+          # `next`, so `latest` would stay on the first rc forever. Until a stable release
+          # exists (latest is itself a prerelease), move `latest` forward to this version
+          # so the registry page and scanners such as Socket show the current release.
+          follow_latest() {
+            [ "$tag" = next ] || return 0
+            name=$(node -p 'require(process.argv[1]).name' "$1/package.json")
+            current=$(npm view "$name" dist-tags.latest)
+            case "$current" in *-*) ;; *) return 0 ;; esac
+            [ "$current" != "$version" ] || return 0
+            newest=$(printf '%s\n%s\n' "$current" "$version" | sort -V | tail -n 1)
+            [ "$newest" = "$version" ] || return 0
+            npm dist-tag add "$name@$version" latest
+          }
           # Explicit ./ paths: npm reads `out/x` as a GitHub shorthand, not a directory.
           # Platform packages first, so the launcher's optionalDependencies resolve.
-          for d in ./out/agentforge-guard-*; do publish "$d"; done
+          for d in ./out/agentforge-guard-*; do publish "$d"; follow_latest "$d"; done
           publish ./out/agentforge-guard
+          follow_latest ./out/agentforge-guard
