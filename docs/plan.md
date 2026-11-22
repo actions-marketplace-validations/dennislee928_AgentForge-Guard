@@ -243,6 +243,7 @@ Users install a released binary without cloning the repository. Go users use the
 - [x] **T14.5** npm package metadata for supply-chain scanners (Socket.dev): every platform package ships a README that names its target and explains how to verify the binary (provenance, `SHA256SUMS`, Sigstore); all manifests carry `keywords`, `author` and `bugs`. Released as `1.0.0-rc.2`.
 - [x] **T14.6** Release binary size: a `[profile.release]` with `strip = "symbols"`, fat LTO and one codegen unit. On macOS arm64 `afg` shrank from 8.54 MB to 5.06 MB (-41%). Panic stays `unwind` so Drop-based cleanup still runs. Released as `1.0.0-rc.3`.
 - [x] **T14.7** npm license and entry point. The npm packages are MIT only, with one `LICENSE` file; the source and crates stay MIT OR Apache-2.0. Each platform package has an `index.js` that exports its binary path. Released as `1.0.0-rc.4`.
+- [x] **T14.8** Separate Socket scanner findings from packaging defects. Record the six `1.0.0-rc.4` package reports and explain the native-package `trivialPackage` classification and score limitations. Correct the platform README's contents and verification instructions; test actual npm tarballs for complete contents, matching binary bytes, resolvable entry points, exact dependency pins and absence of lifecycle scripts. Keep the minimal wrapper; do not add code or suppress findings to raise a score. Evidence and verification: `docs/npm-package-security.md` and `docs/npm-socket-rc.4.json`.
 
 ## Milestone v1.1 — Security Validation & Adoption
 
