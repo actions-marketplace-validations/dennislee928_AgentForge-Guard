@@ -16,7 +16,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Tag matches the workspace version
         run: |
           v=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
@@ -38,7 +38,7 @@ jobs:
           - { os: windows-latest, target: x86_64-pc-windows-msvc }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -67,7 +67,7 @@ jobs:
       id-token: write      # keyless cosign signing and build attestations
       attestations: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           path: dist
@@ -105,7 +105,7 @@ jobs:
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish to crates.io (skipped without a token)
         run: |
@@ -121,8 +121,8 @@ jobs:
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
@@ -148,7 +148,22 @@ jobs:
             fi
             npm publish "$1" --provenance --access public --tag "$tag"
           }
+          # npm gives a package's first publish the `latest` tag, and prereleases go to
+          # `next`, so `latest` would stay on the first rc forever. Until a stable release
+          # exists (latest is itself a prerelease), move `latest` forward to this version
+          # so the registry page and scanners such as Socket show the current release.
+          follow_latest() {
+            [ "$tag" = next ] || return 0
+            name=$(node -p 'require(process.argv[1]).name' "$1/package.json")
+            current=$(npm view "$name" dist-tags.latest)
+            case "$current" in *-*) ;; *) return 0 ;; esac
+            [ "$current" != "$version" ] || return 0
+            newest=$(printf '%s\n%s\n' "$current" "$version" | sort -V | tail -n 1)
+            [ "$newest" = "$version" ] || return 0
+            npm dist-tag add "$name@$version" latest
+          }
           # Explicit ./ paths: npm reads `out/x` as a GitHub shorthand, not a directory.
           # Platform packages first, so the launcher's optionalDependencies resolve.
-          for d in ./out/agentforge-guard-*; do publish "$d"; done
+          for d in ./out/agentforge-guard-*; do publish "$d"; follow_latest "$d"; done
           publish ./out/agentforge-guard
+          follow_latest ./out/agentforge-guard

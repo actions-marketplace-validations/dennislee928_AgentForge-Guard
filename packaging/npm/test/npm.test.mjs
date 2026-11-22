@@ -72,6 +72,26 @@ test('assembles platform packages and a launcher pinned to the same version', ()
   assert.ok(fs.existsSync(path.join(out, 'agentforge-guard-win32-x64/bin/afg.exe')));
 });
 
+test('every package ships a README and the metadata supply-chain scanners check', () => {
+  const dist = fakeDist('1.2.3');
+  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'afg-out-')), 'npm');
+  for (const name of assemble(dist, '1.2.3', out)) {
+    const dir = path.join(out, name);
+    const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    for (const field of ['description', 'keywords', 'author', 'bugs', 'repository', 'homepage', 'license']) {
+      assert.ok(pkg[field] && pkg[field].length !== 0, `${name} lacks ${field}`);
+    }
+    const readme = fs.readFileSync(path.join(dir, 'README.md'), 'utf8');
+    assert.ok(readme.length > 200, `${name} README is too short`);
+    if (name !== 'agentforge-guard') {
+      assert.ok(pkg.files.includes('README.md'), `${name} does not publish its README`);
+      const target = Object.values(TARGETS).find((t) => readme.includes(t));
+      assert.ok(target, `${name} README does not name its target`);
+      assert.match(readme, /SHA256SUMS/);
+    }
+  }
+});
+
 test('a tampered archive aborts assembly', () => {
   const dist = fakeDist('1.0.0');
   fs.appendFileSync(path.join(dist, 'afg-v1.0.0-aarch64-apple-darwin.tar.gz'), 'x');

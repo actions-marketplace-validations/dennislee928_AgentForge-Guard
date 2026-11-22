@@ -4,7 +4,7 @@ members = ["crates/*"]
 exclude = ["examples", "tests", "fuzz"]
 
 [workspace.package]
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 edition = "2024"
 rust-version = "1.89"
 license = "MIT OR Apache-2.0"
@@ -14,10 +14,10 @@ keywords = ["ai-agents", "sandbox", "policy", "security", "cli"]
 categories = ["command-line-utilities", "development-tools"]
 
 [workspace.dependencies]
-afg-core = { path = "crates/afg-core", version = "=1.0.0-rc.1" }
-afg-detect = { path = "crates/afg-detect", version = "=1.0.0-rc.1" }
-afg-executor = { path = "crates/afg-executor", version = "=1.0.0-rc.1" }
-afg-report = { path = "crates/afg-report", version = "=1.0.0-rc.1" }
+afg-core = { path = "crates/afg-core", version = "=1.0.0-rc.2" }
+afg-detect = { path = "crates/afg-detect", version = "=1.0.0-rc.2" }
+afg-executor = { path = "crates/afg-executor", version = "=1.0.0-rc.2" }
+afg-report = { path = "crates/afg-report", version = "=1.0.0-rc.2" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

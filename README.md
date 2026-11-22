@@ -9,20 +9,20 @@
 
 > Local-first for deterministic development; sandbox-first for untrusted execution; approval-gated for infrastructure mutation.
 
-Status: **v1.0.0-rc.1, a release candidate.** It is not yet production-ready: an independent security review is still pending (see [SECURITY.md](SECURITY.md)). See [docs/plan.md](docs/plan.md) for the roadmap.
+Status: **v1.0.0-rc.2, a release candidate.** It is not yet production-ready: an independent security review is still pending (see [SECURITY.md](SECURITY.md)). See [docs/plan.md](docs/plan.md) for the roadmap.
 
 ## Install
 
-Each method installs the `afg` command. While only release candidates exist, ask for the version explicitly: `agentforge-guard@next` on npm, `--version 1.0.0-rc.1` for cargo, and the versioned script URL below. After the first stable release, the script is also at `releases/latest/download/install.sh`.
+Each method installs the `afg` command. While only release candidates exist, ask for the version explicitly: `agentforge-guard@next` on npm, `--version 1.0.0-rc.2` for cargo, and the versioned script URL below. After the first stable release, the script is also at `releases/latest/download/install.sh`.
 
 | You have | Command |
 |---|---|
 | Node.js 18+ | `npm install -g agentforge-guard@next`, or run once with `npx agentforge-guard@next doctor` |
-| Rust | `cargo install agentforge-guard --version 1.0.0-rc.1` |
-| Neither (Go, Python, ...) on macOS or Linux | `curl -fsSL https://github.com/dennislee928/AgentForge-Guard/releases/download/v1.0.0-rc.1/install.sh \| AFG_VERSION=1.0.0-rc.1 sh` |
+| Rust | `cargo install agentforge-guard --version 1.0.0-rc.2` |
+| Neither (Go, Python, ...) on macOS or Linux | `curl -fsSL https://github.com/dennislee928/AgentForge-Guard/releases/download/v1.0.0-rc.2/install.sh \| AFG_VERSION=1.0.0-rc.2 sh` |
 | Windows without Node or Rust | the `.zip` from [GitHub Releases](https://github.com/dennislee928/AgentForge-Guard/releases) |
 
-Prebuilt binaries cover macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x64. The npm package runs the binary from a per-platform optional dependency; it downloads nothing at install time and runs no install scripts. `install.sh` checks the archive against `SHA256SUMS` and, if `cosign` is installed, its Sigstore signature (`AFG_REQUIRE_COSIGN=1` makes that mandatory). Every release file is signed with Sigstore and has SLSA build provenance; npm packages carry npm provenance. A Homebrew formula template is in [packaging/homebrew](packaging/homebrew).
+Prebuilt binaries cover macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x64. On npm, each lives in its own `agentforge-guard-<os>-<cpu>` package, which holds the native `afg` executable by design (supply-chain scanners flag it as a binary); each of those packages has a README explaining how to verify its binary. The npm package runs the binary from a per-platform optional dependency; it downloads nothing at install time and runs no install scripts. `install.sh` checks the archive against `SHA256SUMS` and, if `cosign` is installed, its Sigstore signature (`AFG_REQUIRE_COSIGN=1` makes that mandatory). Every release file is signed with Sigstore and has SLSA build provenance; npm packages carry npm provenance. A Homebrew formula template is in [packaging/homebrew](packaging/homebrew).
 
 ## Commands
 
