@@ -115,6 +115,94 @@ test('every package ships a README and the metadata supply-chain scanners check'
   }
 });
 
+test('platform READMEs describe the JavaScript wrapper and give an exact verification identity', () => {
+  const dist = fakeDist('1.2.3-rc.1');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'afg-readme-'));
+  try {
+    const out = path.join(root, 'npm');
+    for (const name of assemble(dist, '1.2.3-rc.1', out).filter((p) => p !== 'agentforge-guard')) {
+      const readme = fs.readFileSync(path.join(out, name, 'README.md'), 'utf8');
+      assert.doesNotMatch(readme, /no JavaScript/);
+      assert.match(readme, /index\.js/);
+      assert.match(readme, /--certificate-identity/);
+      assert.match(readme, /release\.yml@refs\/tags\/v1\.2\.3-rc\.1/);
+      assert.match(readme, /--certificate-oidc-issuer/);
+      assert.match(readme, /cmp /);
+    }
+  } finally {
+    fs.rmSync(dist, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('npm tarballs ship only intended files and preserve binaries and entry points', () => {
+  const version = '1.2.3-rc.1';
+  const dist = fakeDist(version);
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'afg-pack-'));
+  try {
+    const out = path.join(root, 'npm');
+    const names = assemble(dist, version, out);
+    const emptyConfig = path.join(root, 'empty.npmrc');
+    fs.writeFileSync(emptyConfig, '');
+    for (const name of names) {
+      const dir = path.join(out, name);
+      // Simulate build residue. npm's files allowlist must exclude it, even in bin/.
+      fs.writeFileSync(path.join(dir, 'local.env'), 'TEST_TOKEN=obviously-fake\n');
+      fs.writeFileSync(path.join(dir, 'bin', 'accidental.env'), 'TEST_TOKEN=obviously-fake\n');
+      const packed = spawnSync('npm', [
+        'pack', '--json', '--ignore-scripts', '--offline', '--userconfig', emptyConfig,
+        '--cache', path.join(root, 'cache'), '--pack-destination', root,
+      ], { cwd: dir, encoding: 'utf8' });
+      assert.equal(packed.status, 0, packed.stderr);
+      const [info] = JSON.parse(packed.stdout);
+      const platform = name !== 'agentforge-guard';
+      const exe = name.includes('win32') ? 'bin/afg.exe' : 'bin/afg';
+      const expectedFiles = platform
+        ? ['LICENSE', 'README.md', 'package.json', 'index.js', exe]
+        : ['LICENSE', 'README.md', 'package.json', 'bin/afg.js', 'lib/platform.js'];
+      assert.deepEqual(info.files.map((f) => f.path).sort(), expectedFiles.sort(), name);
+
+      const unpack = path.join(root, name);
+      fs.mkdirSync(unpack);
+      const extracted = spawnSync('tar', ['xzf', path.join(root, info.filename), '-C', unpack]);
+      assert.equal(extracted.status, 0, String(extracted.stderr));
+      const pkgDir = path.join(unpack, 'package');
+      const pkg = JSON.parse(fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf8'));
+      assert.equal(pkg.version, version);
+      assert.equal(pkg.license, 'MIT');
+      assert.equal(pkg.scripts, undefined, `${name}: no lifecycle scripts`);
+      assert.equal(pkg.dependencies, undefined, `${name}: no extra runtime dependencies`);
+      if (platform) {
+        assert.equal(pkg.optionalDependencies, undefined);
+        const resolved = require(pkgDir);
+        assert.equal(resolved, fs.realpathSync(path.join(pkgDir, exe)));
+        assert.deepEqual(fs.readFileSync(resolved), fs.readFileSync(path.join(dir, exe)));
+        assert.ok(fs.statSync(resolved).mode & 0o111, `${name}: executable mode survives npm pack`);
+      } else {
+        assert.deepEqual(Object.keys(pkg.optionalDependencies).sort(), names.filter((n) => n !== name).sort());
+        assert.deepEqual(Object.values(pkg.optionalDependencies), Array(5).fill(version));
+        for (const entry of Object.values(pkg.bin)) {
+          assert.ok(fs.statSync(path.join(pkgDir, entry)).mode & 0o111, `${entry}: executable launcher`);
+        }
+      }
+    }
+    // Exercise the extracted tarballs together, as npm lays them out on this host.
+    const found = resolvePlatform(process.platform, process.arch);
+    if (!(found instanceof Error) && process.platform !== 'win32') {
+      const launcher = path.join(root, 'agentforge-guard', 'package');
+      const modules = path.join(launcher, 'node_modules');
+      fs.mkdirSync(modules);
+      fs.cpSync(path.join(root, found.pkg, 'package'), path.join(modules, found.pkg), { recursive: true });
+      const ran = spawnSync(process.execPath, [path.join(launcher, 'bin/afg.js'), '--version'], { encoding: 'utf8' });
+      assert.equal(ran.status, 0, ran.stderr);
+      assert.equal(ran.stdout.trim(), found.target);
+    }
+  } finally {
+    fs.rmSync(dist, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('a tampered archive aborts assembly', () => {
   const dist = fakeDist('1.0.0');
   fs.appendFileSync(path.join(dist, 'afg-v1.0.0-aarch64-apple-darwin.tar.gz'), 'x');

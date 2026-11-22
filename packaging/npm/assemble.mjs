@@ -36,6 +36,11 @@ function sums(dist) {
 // The README shipped in each platform package: what the binary is, and how to check it.
 function platformReadme(name, target, version, repo) {
   const tag = `v${version}`;
+  const windows = target.includes('windows');
+  const directory = `afg-${tag}-${target}`;
+  const archive = `${directory}.${windows ? 'zip' : 'tar.gz'}`;
+  const exe = windows ? 'afg.exe' : 'afg';
+  const repository = repo.replace('https://github.com/', '');
   return `# ${name}
 
 The prebuilt \`afg\` binary of [AgentForge Guard](${repo}) for \`${target}\`.
@@ -51,7 +56,7 @@ npm install -g agentforge-guard
 
 - \`bin/\`: the \`afg\` executable, built from the tagged source by the
   [release workflow](${repo}/blob/${tag}/.github/workflows/release.yml).
-  This package exists to ship that native binary; it has no JavaScript and no install scripts.
+  This package ships a native binary, a small JavaScript path export, and no install scripts.
 - \`index.js\`: exports the absolute path of the binary (\`require('${name}')\`).
 - \`LICENSE\`: MIT. (The source repository is MIT OR Apache-2.0; the npm packages are published under MIT.)
 
@@ -61,8 +66,31 @@ npm install -g agentforge-guard
   which links it to the GitHub Actions run that built it: \`npm audit signatures\`.
 - The binary is the one in \`afg-${tag}-${target}\` from the
   [${tag} GitHub Release](${repo}/releases/tag/${tag}). That archive is listed in the release's \`SHA256SUMS\`
-  and signed with Sigstore (\`<archive>.sigstore.json\`, workflow identity
-  \`${repo}/.github/workflows/release.yml@refs/tags/v*\`).
+  and signed with Sigstore (\`<archive>.sigstore.json\`).
+
+To compare this npm package's binary with the signed release, run these commands in an empty
+directory using a POSIX shell (Git Bash on Windows). They need npm, GitHub CLI, cosign,
+${windows ? 'unzip, ' : ''}tar and cmp. Stop if any command fails; a matching checksum alone does not authenticate the publisher.
+
+\`\`\`sh
+npm pack ${name}@${version} --ignore-scripts
+tar xzf ${name}-${version}.tgz
+gh release download ${tag} --repo ${repository} --pattern '${archive}' --pattern '${archive}.sigstore.json'
+cosign verify-blob --bundle '${archive}.sigstore.json' --certificate-identity '${repo}/.github/workflows/release.yml@refs/tags/${tag}' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' '${archive}'
+gh attestation verify '${archive}' --repo ${repository}
+${windows ? `unzip -q '${archive}'` : `tar xzf '${archive}'`}
+cmp 'package/bin/${exe}' '${directory}/${exe}'
+\`\`\`
+
+The signatures identify the release workflow; comparing the extracted files checks that npm ships
+the same binary. Neither check proves that the program has no vulnerabilities.
+
+## Scanner interpretation
+
+The three-line \`index.js\` only exports the binary path. A scanner that counts JavaScript lines
+may label it a trivial package even though the payload is a compiled Rust program. Review the
+binary and its provenance rather than treating that line count as the implementation size.
+See the [Socket findings and packaging checks](${repo}/blob/${tag}/docs/npm-package-security.md).
 
 Source, documentation and security policy: ${repo}
 `;
@@ -123,7 +151,7 @@ export function assemble(dist, version, out) {
           os: [os],
           cpu: [cpu],
           main: 'index.js',
-          files: ['bin', 'index.js', 'README.md', 'LICENSE'],
+          files: [`bin/${exe}`, 'index.js', 'README.md', 'LICENSE'],
           preferUnplugged: true,
         },
         null,
