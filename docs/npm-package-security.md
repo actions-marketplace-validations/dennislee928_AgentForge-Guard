@@ -6,7 +6,7 @@ platform package's three-line JavaScript path export. That count describes the w
 but treating the entire native package as trivial misclassifies its payload. Packaging
 defects still need independent tests and fixes.
 
-## rc.5 component metrics and pending improvements
+## rc.5 component metrics and rc.6 improvements
 
 Socket CLI 1.16.0 was used to refresh all six rc.5 reports on 2026-11-22. The detailed
 `/v0/npm/<name>/<version>/score` and `/issues` endpoints provide additional inputs that the
@@ -38,7 +38,7 @@ CLI omits the license alert. This discrepancy is recorded; it is not evidence th
 MIT package needs a different license or that a license-policy change would improve its
 quality or supply-chain score.
 
-The pending implementation adds these behaviors to the next npm release:
+The rc.6 source adds these behaviors:
 
 - Every package ships an explicit `npm test` command and its test source. Platform tests
   verify installed bytes without executing foreign binaries; launcher tests check the
