@@ -14,7 +14,7 @@ Every decision goes into a **redacted audit log**, which you can export as SARIF
 
 > Local-first for deterministic development; sandbox-first for untrusted execution; approval-gated for infrastructure mutation.
 
-**Status:** `1.0.0-rc.4`, a release candidate. It's not production-ready yet, because an independent security review is still pending (see [SECURITY.md](SECURITY.md)). The roadmap is in [docs/plan.md](docs/plan.md).
+**Status:** `1.0.0-rc.5`, a release candidate. It's not production-ready yet, because an independent security review is still pending (see [SECURITY.md](SECURITY.md)). The roadmap is in [docs/plan.md](docs/plan.md).
 
 ---
 
@@ -26,9 +26,9 @@ Every method installs a single command, **`afg`**.
 |---|---|---|
 | Node.js 18+ | `npm install -g agentforge-guard` | `afg --version` |
 | Node.js, without installing | `npx agentforge-guard --help` | |
-| Rust 1.89+ | `cargo install agentforge-guard --version 1.0.0-rc.4` | `afg --version` |
-| macOS or Linux, no Node or Rust | `curl -fsSL https://github.com/dennislee928/AgentForge-Guard/releases/download/v1.0.0-rc.4/install.sh \| AFG_VERSION=1.0.0-rc.4 sh` | `~/.local/bin/afg --version` |
-| Windows, no Node or Rust | Download `afg-v1.0.0-rc.4-x86_64-pc-windows-msvc.zip` from [Releases](https://github.com/dennislee928/AgentForge-Guard/releases) and put `afg.exe` on your `PATH` | `afg --version` |
+| Rust 1.89+ | `cargo install agentforge-guard --version 1.0.0-rc.5` | `afg --version` |
+| macOS or Linux, no Node or Rust | `curl -fsSL https://github.com/dennislee928/AgentForge-Guard/releases/download/v1.0.0-rc.5/install.sh \| AFG_VERSION=1.0.0-rc.5 sh` | `~/.local/bin/afg --version` |
+| Windows, no Node or Rust | Download `afg-v1.0.0-rc.5-x86_64-pc-windows-msvc.zip` from [Releases](https://github.com/dennislee928/AgentForge-Guard/releases) and put `afg.exe` on your `PATH` | `afg --version` |
 
 > **Install `agentforge-guard`, not `agentforge-guard-<os>-<cpu>`.** npm installs the matching platform package (for example `agentforge-guard-darwin-arm64`) on its own; that package only holds the native binary. Also note that `npm agentforge-guard …` is not an npm command. Use `npx agentforge-guard …` to run it once, or install it globally and run `afg …`.
 
@@ -235,7 +235,7 @@ These are **not** equivalent levels of protection. See [docs/security-boundaries
 `action.yml` is a composite GitHub Action. It validates the policy, runs `afg doctor`, and uploads the audit report as SARIF:
 
 ```yaml
-- uses: dennislee928/AgentForge-Guard@v1.0.0-rc.4
+- uses: dennislee928/AgentForge-Guard@v1.0.0-rc.5
   with:
     working-directory: .
     upload-sarif: true
