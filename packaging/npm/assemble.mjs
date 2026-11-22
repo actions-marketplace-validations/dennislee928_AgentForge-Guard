@@ -73,6 +73,7 @@ directory using a POSIX shell (Git Bash on Windows). They need npm, GitHub CLI, 
 ${windows ? 'unzip, ' : ''}tar and cmp. Stop if any command fails; a matching checksum alone does not authenticate the publisher.
 
 \`\`\`sh
+set -eu
 npm pack ${name}@${version} --ignore-scripts
 tar xzf ${name}-${version}.tgz
 gh release download ${tag} --repo ${repository} --pattern '${archive}' --pattern '${archive}.sigstore.json'

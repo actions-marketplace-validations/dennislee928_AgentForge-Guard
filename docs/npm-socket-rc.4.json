@@ -1,0 +1,73 @@
+{
+  "observedOn": "2026-11-22",
+  "cliVersion": "1.16.0",
+  "description": "Selected fields from Socket CLI package shallow and package score responses. Shallow scores retain the API's 0..1 units; deep scores retain 0..100 units.",
+  "version": "1.0.0-rc.4",
+  "shallow": [
+    {
+      "name": "agentforge-guard",
+      "id": "101977592538",
+      "size": 16240,
+      "alerts": [],
+      "score": { "license": 1, "maintenance": 0.91, "overall": 0.69, "quality": 0.99, "supplyChain": 0.69, "vulnerability": 1 }
+    },
+    {
+      "name": "agentforge-guard-darwin-arm64",
+      "id": "101977592203",
+      "size": 5063945,
+      "alerts": [{ "type": "trivialPackage", "severity": "middle", "category": "supplyChainRisk", "file": "package/index.js", "props": { "linesOfCode": 3 } }],
+      "score": { "license": 1, "maintenance": 0.89, "overall": 0.57, "quality": 0.58, "supplyChain": 0.57, "vulnerability": 1 }
+    },
+    {
+      "name": "agentforge-guard-darwin-x64",
+      "id": "101977592713",
+      "size": 5647598,
+      "alerts": [{ "type": "trivialPackage", "severity": "middle", "category": "supplyChainRisk", "file": "package/index.js", "props": { "linesOfCode": 3 } }],
+      "score": { "license": 1, "maintenance": 0.89, "overall": 0.57, "quality": 0.58, "supplyChain": 0.57, "vulnerability": 1 }
+    },
+    {
+      "name": "agentforge-guard-linux-arm64",
+      "id": "101977592674",
+      "size": 5383084,
+      "alerts": [{ "type": "trivialPackage", "severity": "middle", "category": "supplyChainRisk", "file": "package/index.js", "props": { "linesOfCode": 3 } }],
+      "score": { "license": 1, "maintenance": 0.91, "overall": 0.57, "quality": 0.58, "supplyChain": 0.57, "vulnerability": 1 }
+    },
+    {
+      "name": "agentforge-guard-linux-x64",
+      "id": "101977592522",
+      "size": 6272577,
+      "alerts": [{ "type": "trivialPackage", "severity": "middle", "category": "supplyChainRisk", "file": "package/index.js", "props": { "linesOfCode": 3 } }],
+      "score": { "license": 1, "maintenance": 0.91, "overall": 0.57, "quality": 0.58, "supplyChain": 0.57, "vulnerability": 1 }
+    },
+    {
+      "name": "agentforge-guard-win32-x64",
+      "id": "101977600800",
+      "size": 6669511,
+      "alerts": [{ "type": "trivialPackage", "severity": "middle", "category": "supplyChainRisk", "file": "package/index.js", "props": { "linesOfCode": 3 } }],
+      "score": { "license": 1, "maintenance": 0.9, "overall": 0.57, "quality": 0.58, "supplyChain": 0.57, "vulnerability": 1 }
+    }
+  ],
+  "deep": {
+    "purl": "pkg:npm/agentforge-guard@1.0.0-rc.4",
+    "self": {
+      "score": { "license": 100, "maintenance": 90, "overall": 68, "quality": 98, "supplyChain": 68, "vulnerability": 100 },
+      "alerts": []
+    },
+    "transitively": {
+      "dependencyCount": 5,
+      "func": "min",
+      "score": { "license": 100, "maintenance": 89, "overall": 57, "quality": 57, "supplyChain": 57, "vulnerability": 100 },
+      "alerts": [{ "name": "trivialPackage", "severity": "middle", "category": "supplyChainRisk", "example": "npm/agentforge-guard-darwin-arm64@1.0.0-rc.4" }]
+    }
+  },
+  "inspectedArtifact": {
+    "package": "agentforge-guard-darwin-arm64@1.0.0-rc.4",
+    "tarballSha1ReportedByNpm": "47e662ee452e06cbece8520ec889897437c1f92c",
+    "files": ["LICENSE", "README.md", "bin/afg", "index.js", "package.json"],
+    "binaryFormat": "Mach-O 64-bit executable arm64",
+    "binarySha256": "f3494bedd527d1fdf9ace51aa453a8cd464b2616dd8a15776e5c9238ab9a2c43",
+    "matchingReleaseArchive": "afg-v1.0.0-rc.4-aarch64-apple-darwin.tar.gz",
+    "binaryMatchesReleaseArchive": true,
+    "githubAttestationVerifiedForRepository": "dennislee928/AgentForge-Guard"
+  }
+}
