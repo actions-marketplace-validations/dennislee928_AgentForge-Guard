@@ -72,6 +72,29 @@ test('assembles platform packages and a launcher pinned to the same version', ()
   assert.ok(fs.existsSync(path.join(out, 'agentforge-guard-win32-x64/bin/afg.exe')));
 });
 
+test('npm packages are MIT only and platform packages have a real entry point', () => {
+  const dist = fakeDist('1.2.3');
+  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'afg-out-')), 'npm');
+  const require2 = createRequire(import.meta.url);
+  for (const name of assemble(dist, '1.2.3', out)) {
+    const dir = path.join(out, name);
+    const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    // One license per package: scanners read two license files as "Apache-2.0 AND MIT".
+    assert.equal(pkg.license, 'MIT', `${name} license`);
+    assert.ok(fs.existsSync(path.join(dir, 'LICENSE')), `${name} has LICENSE`);
+    assert.ok(!fs.readdirSync(dir).some((f) => /APACHE/i.test(f)), `${name} ships no Apache license file`);
+    assert.ok(!pkg.files.some((f) => /APACHE/i.test(f)), `${name} files list has no Apache license`);
+    if (name !== 'agentforge-guard') {
+      // A JS entry point that resolves to the shipped binary, so the package is not "empty".
+      assert.equal(pkg.main, 'index.js', `${name} main`);
+      assert.ok(pkg.files.includes('index.js'), `${name} publishes index.js`);
+      const resolved = require2(path.join(dir, 'index.js'));
+      assert.ok(fs.existsSync(resolved), `${name} index.js points at a file: ${resolved}`);
+      assert.match(path.basename(resolved), /^afg(\.exe)?$/);
+    }
+  }
+});
+
 test('every package ships a README and the metadata supply-chain scanners check', () => {
   const dist = fakeDist('1.2.3');
   const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'afg-out-')), 'npm');
