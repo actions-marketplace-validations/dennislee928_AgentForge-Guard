@@ -4,7 +4,10 @@
 // Runs the `afg` binary from the matching optional platform package.
 // Nothing is downloaded at install or run time, and no shell is involved.
 const { spawnSync } = require('node:child_process');
+const path = require('node:path');
 const { resolvePlatform } = require('../lib/platform.js');
+const { verifyBinary } = require('../lib/integrity.js');
+const { version } = require('../package.json');
 
 function glibc() {
   if (process.platform !== 'linux') return true;
@@ -20,10 +23,11 @@ if (found instanceof Error) {
 
 let binary;
 try {
-  binary = require.resolve(`${found.pkg}/${found.bin}`);
-} catch {
+  const directory = path.dirname(require.resolve(`${found.pkg}/package.json`));
+  binary = verifyBinary(directory, { name: found.pkg, version, target: found.target, binary: found.bin });
+} catch (error) {
   console.error(
-    `agentforge-guard: the platform package ${found.pkg} is not installed. ` +
+    `agentforge-guard: binary integrity check failed for ${found.pkg}: ${error.message}. ` +
       'Reinstall without --no-optional / --omit=optional, or install from source with: cargo install agentforge-guard',
   );
   process.exit(1);

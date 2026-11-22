@@ -24,8 +24,14 @@ pub fn run_dir(dir: &str) -> usize {
     files.sort();
     assert!(!files.is_empty(), "no fixtures in {}", dir.display());
 
-    // A scratch workspace, plus a fake home that holds a fake key.
-    let scratch = std::env::temp_dir().join(format!("afg-fixtures-{}", std::process::id()));
+    // A scratch workspace, plus a fake home that holds a fake key. One per call:
+    // the tests run in parallel, and a shared directory let one test delete the
+    // other's symlink fixture mid-run (the symlink case then saw no file).
+    let scratch = std::env::temp_dir().join(format!(
+        "afg-fixtures-{}-{}",
+        std::process::id(),
+        dir.file_name().unwrap().to_string_lossy()
+    ));
     let home = scratch.join("home");
     let cwd = scratch.join("repo");
     std::fs::create_dir_all(home.join(".ssh")).unwrap();

@@ -4,3 +4,6 @@
 .DS_Store
 node_modules/
 *.env
+docs/plan.md
+*.txt
+docs/plan.md

@@ -1,0 +1,60 @@
+{
+  "observedOn": "2026-11-22",
+  "version": "1.0.0-rc.5",
+  "cliVersion": "1.16.0",
+  "description": "Selected fields from refreshed Socket CLI shallow reports and authenticated legacy /v0/npm/<name>/<version>/score and /issues responses. Scores below retain 0..1 units. No tokens or organization policy identifiers are included.",
+  "cliShallow": {
+    "agentforge-guard": { "supplyChain": 0.69, "quality": 0.99, "alerts": [] },
+    "agentforge-guard-darwin-arm64": { "supplyChain": 0.57, "quality": 0.69, "alerts": ["trivialPackage"] },
+    "agentforge-guard-darwin-x64": { "supplyChain": 0.57, "quality": 0.69, "alerts": ["trivialPackage"] },
+    "agentforge-guard-linux-arm64": { "supplyChain": 0.57, "quality": 0.69, "alerts": ["trivialPackage"] },
+    "agentforge-guard-linux-x64": { "supplyChain": 0.57, "quality": 0.69, "alerts": ["trivialPackage"] },
+    "agentforge-guard-win32-x64": { "supplyChain": 0.57, "quality": 0.69, "alerts": ["trivialPackage"] }
+  },
+  "detailedPlatformMetrics": {
+    "appliesTo": ["agentforge-guard-darwin-arm64", "agentforge-guard-darwin-x64", "agentforge-guard-linux-arm64", "agentforge-guard-linux-x64", "agentforge-guard-win32-x64"],
+    "supplyChainRisk": {
+      "score": 0.5740074017843043,
+      "components": {
+        "downloadCount": { "score": 0, "maxScore": 0.2857142857142857, "value": 0 },
+        "supplyChainRiskIssueMid": { "score": 0.11286603434215788, "maxScore": 0.11428571428571428, "value": 1 },
+        "dependencyCount": { "score": 0.05714285714285714, "maxScore": 0.05714285714285714, "value": 0 },
+        "totalDependencyCount": { "score": 0.05708574284762143, "maxScore": 0.05714285714285714, "value": 1 }
+      }
+    },
+    "quality": {
+      "score": 0.6919789765942156,
+      "components": {
+        "qualityIssueLow": { "score": 0.19680608782773393, "maxScore": 0.20689655172413793, "value": 2 },
+        "linesOfCode": { "score": 0.0020689655172413794, "maxScore": 0.034482758620689655, "value": 3 },
+        "readmeLength": { "score": 0.18620689655172415, "maxScore": 0.3448275862068966, "value": 54 }
+      }
+    }
+  },
+  "detailedLauncherMetrics": {
+    "supplyChainRiskScore": 0.6889424019886007,
+    "qualityScore": 0.9641341649539487,
+    "downloadCount": 0,
+    "readmeLength": 335,
+    "linesOfCode": 70,
+    "qualityIssueLow": 7
+  },
+  "platformIssueTypesObserved": ["licenseSpdxDisj", "noTests", "noV1", "trivialPackage"],
+  "licensePolicyDiscrepancy": {
+    "type": "licenseSpdxDisj",
+    "spdxDisj": "MIT",
+    "violationData": [],
+    "warnData": [],
+    "monitorData": [],
+    "shallowAndDetailedLicenseScore": 1
+  },
+  "localPreview": {
+    "published": false,
+    "inputArchivesVersion": "1.0.0-rc.5",
+    "platformReadmeNewlineCountBefore": 53,
+    "platformReadmeNewlineCountAfter": 157,
+    "packagedTestsPerPackage": 3,
+    "packageCount": 6,
+    "hostLauncherVersionOutput": "afg 1.0.0-rc.5"
+  }
+}
