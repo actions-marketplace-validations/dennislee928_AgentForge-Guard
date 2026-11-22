@@ -60,8 +60,8 @@ The tarball tests also enforce MIT licensing, no lifecycle scripts, no additiona
 dependencies, executable modes and exact version pins for the five optional dependencies.
 CI already runs this packaging suite on each PR.
 
-These changes apply to the next publication. Published `1.0.0-rc.4` artifacts and public
-Socket scores have not been changed. The minimal `index.js` remains three lines. There are
+These packaging fixes are included in the `1.0.0-rc.5` source. Published `1.0.0-rc.4` artifacts
+and its recorded Socket scores are unchanged. The minimal `index.js` remains three lines. There are
 no scanner exclusions, score thresholds or organization-policy changes in this fix.
 
 ## Rechecking a release
