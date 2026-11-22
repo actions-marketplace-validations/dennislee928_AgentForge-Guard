@@ -7,12 +7,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 import { assemble } from '../assemble.mjs';
 
 const require = createRequire(import.meta.url);
 const { TARGETS, resolvePlatform } = require('../agentforge-guard/lib/platform.js');
-const here = path.dirname(fileURLToPath(import.meta.url));
 
 test('resolves every release target to its platform package', () => {
   assert.deepEqual(resolvePlatform('darwin', 'arm64'), {
@@ -53,6 +51,88 @@ function fakeDist(version) {
   return dist;
 }
 
+function installedFixture() {
+  const version = '1.2.3-rc.1';
+  const dist = fakeDist(version);
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'afg-integrity-'));
+  const out = path.join(root, 'out');
+  assemble(dist, version, out);
+  const modules = path.join(root, 'node_modules');
+  fs.renameSync(out, modules);
+  const found = resolvePlatform(process.platform, process.arch);
+  assert.ok(!(found instanceof Error));
+  return {
+    dir: path.join(modules, found.pkg),
+    binary: path.join(modules, found.pkg, found.bin),
+    launcher: path.join(modules, 'agentforge-guard', 'bin/afg.js'),
+    cleanup() {
+      fs.rmSync(root, { recursive: true, force: true });
+      fs.rmSync(dist, { recursive: true, force: true });
+    },
+  };
+}
+
+for (const failure of ['binary', 'same-size', 'version', 'manifest', 'digest', 'target', 'symlink']) {
+  test(`launcher rejects ${failure} tampering before the binary runs`, { skip: process.platform === 'win32' }, () => {
+    const fixture = installedFixture();
+    try {
+      const artifactFile = path.join(fixture.dir, 'artifact.json');
+      if (failure === 'binary') fs.appendFileSync(fixture.binary, '# tampered\n');
+      if (failure === 'same-size') {
+        const bytes = fs.readFileSync(fixture.binary);
+        bytes[bytes.length - 2] ^= 1;
+        fs.writeFileSync(fixture.binary, bytes);
+      }
+      if (failure === 'version') {
+        const file = path.join(fixture.dir, 'package.json');
+        const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+        pkg.version = '9.9.9';
+        fs.writeFileSync(file, JSON.stringify(pkg));
+      }
+      if (failure === 'manifest') fs.rmSync(artifactFile, { force: true });
+      if (failure === 'digest' || failure === 'target') {
+        const manifest = JSON.parse(fs.readFileSync(artifactFile, 'utf8'));
+        if (failure === 'digest') manifest.sha256 = 'invalid';
+        else manifest.target = 'wrong-target';
+        fs.writeFileSync(artifactFile, JSON.stringify(manifest));
+      }
+      if (failure === 'symlink') {
+        fs.renameSync(fixture.binary, `${fixture.binary}.other`);
+        fs.symlinkSync(`${fixture.binary}.other`, fixture.binary);
+      }
+      const ran = spawnSync(process.execPath, [fixture.launcher], { encoding: 'utf8' });
+      assert.equal(ran.status, 1);
+      assert.equal(ran.stdout, '', 'unverified binary must not run');
+      assert.match(ran.stderr, /integrity|version mismatch/i);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+}
+
+test('all npm artifacts ship runnable package tests and binary integrity metadata', () => {
+  const dist = fakeDist('1.2.3-rc.1');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'afg-selftest-'));
+  try {
+    const out = path.join(root, 'out');
+    for (const name of assemble(dist, '1.2.3-rc.1', out)) {
+      const dir = path.join(out, name);
+      const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+      assert.deepEqual(pkg.scripts, { test: 'node --test test/package.test.cjs' });
+      assert.ok(pkg.files.includes('test/package.test.cjs'));
+      if (name !== 'agentforge-guard') {
+        const artifact = JSON.parse(fs.readFileSync(path.join(dir, 'artifact.json'), 'utf8'));
+        assert.equal(artifact.name, name);
+        assert.equal(artifact.version, pkg.version);
+        assert.equal(artifact.sha256, createHash('sha256').update(fs.readFileSync(path.join(dir, artifact.binary))).digest('hex'));
+      }
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(dist, { recursive: true, force: true });
+  }
+});
+
 test('assembles platform packages and a launcher pinned to the same version', () => {
   const dist = fakeDist('1.2.3-rc.1');
   const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'afg-out-')), 'npm');
@@ -61,7 +141,7 @@ test('assembles platform packages and a launcher pinned to the same version', ()
 
   const main = JSON.parse(fs.readFileSync(path.join(out, 'agentforge-guard/package.json'), 'utf8'));
   assert.equal(main.version, '1.2.3-rc.1');
-  assert.equal(main.scripts, undefined, 'no install-time scripts');
+  assert.deepEqual(main.scripts, { test: 'node --test test/package.test.cjs' }, 'only an explicit test command, no lifecycle hooks');
   assert.deepEqual(Object.values(main.optionalDependencies), Array(5).fill('1.2.3-rc.1'));
 
   const linux = JSON.parse(fs.readFileSync(path.join(out, 'agentforge-guard-linux-x64/package.json'), 'utf8'));
@@ -158,8 +238,8 @@ test('npm tarballs ship only intended files and preserve binaries and entry poin
       const platform = name !== 'agentforge-guard';
       const exe = name.includes('win32') ? 'bin/afg.exe' : 'bin/afg';
       const expectedFiles = platform
-        ? ['LICENSE', 'README.md', 'package.json', 'index.js', exe]
-        : ['LICENSE', 'README.md', 'package.json', 'bin/afg.js', 'lib/platform.js'];
+        ? ['LICENSE', 'README.md', 'package.json', 'index.js', exe, 'lib/integrity.js', 'artifact.json', 'test/package.test.cjs']
+        : ['LICENSE', 'README.md', 'package.json', 'bin/afg.js', 'lib/platform.js', 'lib/integrity.js', 'test/package.test.cjs'];
       assert.deepEqual(info.files.map((f) => f.path).sort(), expectedFiles.sort(), name);
 
       const unpack = path.join(root, name);
@@ -170,7 +250,7 @@ test('npm tarballs ship only intended files and preserve binaries and entry poin
       const pkg = JSON.parse(fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf8'));
       assert.equal(pkg.version, version);
       assert.equal(pkg.license, 'MIT');
-      assert.equal(pkg.scripts, undefined, `${name}: no lifecycle scripts`);
+      assert.deepEqual(pkg.scripts, { test: 'node --test test/package.test.cjs' }, `${name}: only a test script, no lifecycle hooks`);
       assert.equal(pkg.dependencies, undefined, `${name}: no extra runtime dependencies`);
       if (platform) {
         assert.equal(pkg.optionalDependencies, undefined);
@@ -178,6 +258,8 @@ test('npm tarballs ship only intended files and preserve binaries and entry poin
         assert.equal(resolved, fs.realpathSync(path.join(pkgDir, exe)));
         assert.deepEqual(fs.readFileSync(resolved), fs.readFileSync(path.join(dir, exe)));
         assert.ok(fs.statSync(resolved).mode & 0o111, `${name}: executable mode survives npm pack`);
+        const selftest = spawnSync(process.execPath, ['--test', path.join(pkgDir, 'test/package.test.cjs')], { encoding: 'utf8' });
+        assert.equal(selftest.status, 0, selftest.stdout + selftest.stderr);
       } else {
         assert.deepEqual(Object.keys(pkg.optionalDependencies).sort(), names.filter((n) => n !== name).sort());
         assert.deepEqual(Object.values(pkg.optionalDependencies), Array(5).fill(version));
@@ -196,6 +278,8 @@ test('npm tarballs ship only intended files and preserve binaries and entry poin
       const ran = spawnSync(process.execPath, [path.join(launcher, 'bin/afg.js'), '--version'], { encoding: 'utf8' });
       assert.equal(ran.status, 0, ran.stderr);
       assert.equal(ran.stdout.trim(), found.target);
+      const selftest = spawnSync(process.execPath, ['--test', path.join(launcher, 'test/package.test.cjs')], { encoding: 'utf8' });
+      assert.equal(selftest.status, 0, selftest.stdout + selftest.stderr);
     }
   } finally {
     fs.rmSync(dist, { recursive: true, force: true });
@@ -218,16 +302,17 @@ test('a missing target aborts assembly', () => {
 });
 
 test('the launcher runs the platform binary and forwards args and exit code', { skip: process.platform === 'win32' }, () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'afg-launch-'));
-  const found = resolvePlatform(process.platform, process.arch);
-  if (found instanceof Error) return;
-  const pkgDir = path.join(root, 'node_modules', found.pkg);
-  fs.mkdirSync(path.join(pkgDir, 'bin'), { recursive: true });
-  fs.writeFileSync(path.join(pkgDir, 'package.json'), JSON.stringify({ name: found.pkg, version: '0.0.0' }));
-  fs.writeFileSync(path.join(pkgDir, found.bin), '#!/bin/sh\necho "args:$*"\nexit 7\n', { mode: 0o755 });
-  const launcher = path.join(root, 'node_modules/agentforge-guard');
-  fs.cpSync(path.join(here, '../agentforge-guard'), launcher, { recursive: true });
-  const r = spawnSync(process.execPath, [path.join(launcher, 'bin/afg.js'), 'policy', 'explain', '--', 'rm -rf /'], { encoding: 'utf8' });
-  assert.equal(r.stdout.trim(), 'args:policy explain -- rm -rf /');
-  assert.equal(r.status, 7);
+  const fixture = installedFixture();
+  try {
+    fs.writeFileSync(fixture.binary, '#!/bin/sh\necho "args:$*"\nexit 7\n', { mode: 0o755 });
+    const file = path.join(fixture.dir, 'artifact.json');
+    const artifact = JSON.parse(fs.readFileSync(file, 'utf8'));
+    artifact.sha256 = createHash('sha256').update(fs.readFileSync(fixture.binary)).digest('hex');
+    fs.writeFileSync(file, JSON.stringify(artifact));
+    const r = spawnSync(process.execPath, [fixture.launcher, 'policy', 'explain', '--', 'rm -rf /'], { encoding: 'utf8' });
+    assert.equal(r.stdout.trim(), 'args:policy explain -- rm -rf /');
+    assert.equal(r.status, 7);
+  } finally {
+    fixture.cleanup();
+  }
 });
