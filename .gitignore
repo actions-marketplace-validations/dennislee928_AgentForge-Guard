@@ -5,3 +5,4 @@
 node_modules/
 *.env
 docs/plan.md
+*.txt

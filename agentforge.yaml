@@ -124,6 +124,11 @@ rules:
       - [node]
       - [make]
 
+  - id: socket-cli
+    effect: require-approval
+    commands:
+      - [npx, -y, "@socketsecurity/cli"]
+
   # Dependency installation runs package lifecycle scripts and needs the
   # network, so a human decides.
   - id: dependency-install
@@ -198,7 +203,41 @@ rules:
       - ["cargo", "fetch"]
       - ["zig", "build", "--fetch"]
 
+# Paste these rules into agentforge.yaml, directly above the line:
+#   - id: destructive-operations
+# Keep the two-space indentation. Then run:  npx agentforge-guard policy trust
+
+  # Agent development workflow in this repo.
+  - id: dev-git
+    effect: allow
+    commands:
+      - [git, checkout]
+      - [git, switch]
+      - [git, add]
+      - [git, commit]
+      - [git, fetch]
+      - [git, pull, --ff-only]
+
+  # node is routed to the sandbox by isolated-scripts; require-approval outranks
+  # route, so packaging tests run locally once a human approves them.
+  - id: npm-packaging-tests
+    effect: require-approval
+    commands:
+      - [node, --test]
+
+  # GitHub CLI and the Socket REST API reach the network: approve each call.
+  - id: github-cli
+    effect: require-approval
+    commands:
+      - [gh]
+  - id: socket-api
+    effect: require-approval
+    commands:
+      - [curl, -s, --netrc-file]
+
+
 audit:
   format: json
   redactSecrets: true
   dir: .agentforge/audit
+
