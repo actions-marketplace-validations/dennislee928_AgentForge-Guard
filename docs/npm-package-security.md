@@ -6,6 +6,69 @@ platform package's three-line JavaScript path export. That count describes the w
 but treating the entire native package as trivial misclassifies its payload. Packaging
 defects still need independent tests and fixes.
 
+## rc.5 component metrics and pending improvements
+
+Socket CLI 1.16.0 was used to refresh all six rc.5 reports on 2026-11-22. The detailed
+`/v0/npm/<name>/<version>/score` and `/issues` endpoints provide additional inputs that the
+CLI's shallow report does not expose. Selected observations are in
+[npm-socket-rc.5.json](npm-socket-rc.5.json). The endpoints return different views: the
+launcher has quality 99 in the shallow CLI report and approximately 96.4 in the detailed
+report, whose issue locations include dependencies. Do not mix these scores into one baseline.
+
+| Detailed rc.5 metric | Five platform packages | Launcher | Action |
+|---|---:|---:|---|
+| Supply chain score | 57.4007 | 68.8942 | Add actual artifact-integrity checks; public score still requires a rescan |
+| Quality score | 69.1979 | 96.4134 | Ship runnable tests and improve platform documentation |
+| Download count | 0 | 0 | Requires real adoption and metric refresh; no synthetic traffic |
+| README length reported by Socket | 54 | 335 | Platform docs now cover installation, API, tests, integrity, provenance and troubleshooting |
+| JavaScript lines reported by Socket | 3 | 70 | The platform export now calls a real integrity verifier; no filler code |
+| Low quality issue count | 2 | 7 | `noTests` is actionable; `noV1` remains appropriate while prerelease |
+
+For a platform package, the README component contributes 0.186207 out of a possible
+0.344828, code size contributes 0.002069 out of 0.034483, and the download component
+contributes zero out of 0.285714. These are component weights, not direct final-score
+percentage-point losses; the final score also applies scaling. The missing download input
+dominates the remaining supply-chain gap. Smaller archives alone cannot fill it, and the
+rc.5 response does not include a bundle-size component in quality.
+
+The detailed issues endpoint reports `noTests`, `noV1` and `trivialPackage` for a platform
+package. It also reports a `licenseSpdxDisj` policy alert with `spdxDisj: MIT` and empty
+violation/warning/monitor arrays, while both score APIs give license 100 and the shallow
+CLI omits the license alert. This discrepancy is recorded; it is not evidence that the
+MIT package needs a different license or that a license-policy change would improve its
+quality or supply-chain score.
+
+The pending implementation adds these behaviors to the next npm release:
+
+- Every package ships an explicit `npm test` command and its test source. Platform tests
+  verify installed bytes without executing foreign binaries; launcher tests check the
+  installed host dependency and exact version pins. No install or publish lifecycle hooks
+  are added, and the allowlist names every shipped file.
+- Each platform package includes `artifact.json` with its binary hash and source archive
+  identity/hash. The path export checks the local binary before returning its path. The
+  launcher also checks the expected package name, version, target and binary path before
+  spawning it. A missing/malformed manifest, wrong version, modified binary (including
+  same-size changes) or binary symlink fails before execution.
+- Platform READMEs grew from 53 to 157 physical newline-terminated lines in a local preview
+  (`wc -l`; Socket reported 54 for the old file). The added sections explain actual
+  supported workflows, prerequisites, verification limits, tests and installation failures.
+
+The integrity verifier reads only package-local files and uses Node built-ins, with no
+new dependencies, downloads or install-time execution. Reading and hashing the binary adds
+startup work and may produce legitimate filesystem/cryptographic capability findings.
+The co-shipped hash is not a trust anchor: an attacker who can change the binary, manifest
+and verifier can bypass this check, and it does not prevent a file swap after verification.
+npm provenance and signed release comparison remain the origin checks. Policy authorization
+continues to belong to `afg-core`.
+
+The regression suite packs/extracts all six artifacts, runs their included tests, and
+checks rejection of corrupted bytes and metadata. A preview assembled from the real,
+previously attested rc.5 archives also passed all six package self-test suites, and the
+host launcher returned `afg 1.0.0-rc.5`. This preview was local and was not republished as
+rc.5. Public post-change scores, removal of scanner alerts, and the next release's complete
+OS installation matrix remain unverified until publication and rescan. `noV1` is not a
+reason to bypass the independent-review gate for stable 1.0.0.
+
 ## Socket results for 1.0.0-rc.4
 
 Socket CLI 1.16.0 returned the following results on 2026-11-22. The normalized

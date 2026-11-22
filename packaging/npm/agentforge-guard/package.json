@@ -29,11 +29,16 @@
   "files": [
     "bin/afg.js",
     "lib/platform.js",
+    "lib/integrity.js",
+    "test/package.test.cjs",
     "README.md",
     "LICENSE"
   ],
   "engines": {
     "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/package.test.cjs"
   },
   "optionalDependencies": {}
 }

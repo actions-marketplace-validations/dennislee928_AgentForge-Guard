@@ -39,9 +39,11 @@ Every method installs a single command, **`afg`**.
 - `install.sh` checks the archive against `SHA256SUMS`. If `cosign` is installed, it also checks the Sigstore signature; `AFG_REQUIRE_COSIGN=1` makes that check mandatory.
 - Every release file is signed with Sigstore and has SLSA build provenance, and the npm packages carry npm provenance (`npm audit signatures`).
 
-Socket flags the platform packages' three-line JavaScript path exports as `trivialPackage`;
-their payloads are compiled Rust executables. The [npm package security report](docs/npm-package-security.md)
-separates that classification from packaging defects, records the release's scores, and explains verification.
+Socket's rc.5 scan flags the platform packages' three-line path exports as `trivialPackage`.
+The next npm release adds an integrity verifier behind that export, checks binary hashes and matching
+versions before launch, and ships runnable package tests. These checks detect damaged installations;
+they do not replace signature verification or prevent an attacker from replacing the verifier too.
+The [npm package security report](docs/npm-package-security.md) records the metrics, improvements and limits.
 
 A Homebrew formula template is in [packaging/homebrew](packaging/homebrew).
 
