@@ -1,0 +1,13 @@
+// AgentForge Guard adoption dashboard. Works on the Workers free plan:
+// no bindings, no storage, no Containers.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "agentforge-guard-adoption",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "vars": {
+    "PACKAGES": "agentforge-guard,agentforge-guard-darwin-arm64,agentforge-guard-darwin-x64,agentforge-guard-linux-arm64,agentforge-guard-linux-x64,agentforge-guard-win32-x64",
+    "LAUNCH_DATE": "2026-11-21"
+  }
+}
