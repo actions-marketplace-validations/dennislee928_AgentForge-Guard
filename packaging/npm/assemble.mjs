@@ -52,7 +52,8 @@ npm install -g agentforge-guard
 - \`bin/\`: the \`afg\` executable, built from the tagged source by the
   [release workflow](${repo}/blob/${tag}/.github/workflows/release.yml).
   This package exists to ship that native binary; it has no JavaScript and no install scripts.
-- \`LICENSE-MIT\`, \`LICENSE-APACHE\`: dual licensed, MIT OR Apache-2.0.
+- \`index.js\`: exports the absolute path of the binary (\`require('${name}')\`).
+- \`LICENSE\`: MIT. (The source repository is MIT OR Apache-2.0; the npm packages are published under MIT.)
 
 ## Verifying the binary
 
@@ -85,11 +86,11 @@ export function assemble(dist, version, out) {
 
     const name = `agentforge-guard-${key}`;
     const pkgDir = path.join(out, name);
+    const exe = windows ? 'afg.exe' : 'afg';
     const tmp = fs.mkdtempSync(path.join(out + '-tmp-'));
     try {
       if (windows) run('unzip', ['-q', file, '-d', tmp]);
       else run('tar', ['xzf', file, '-C', tmp]);
-      const exe = windows ? 'afg.exe' : 'afg';
       const bin = path.join(tmp, `afg-v${version}-${target}`, exe);
       if (!fs.existsSync(bin)) throw new Error(`${archive} has no ${exe}`);
       fs.mkdirSync(path.join(pkgDir, 'bin'), { recursive: true });
@@ -98,7 +99,13 @@ export function assemble(dist, version, out) {
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
-    for (const f of ['LICENSE-MIT', 'LICENSE-APACHE']) fs.copyFileSync(path.join(repoRoot, f), path.join(pkgDir, f));
+    // npm packages are MIT only: scanners read two license files as "Apache-2.0 AND MIT".
+    fs.copyFileSync(path.join(repoRoot, 'LICENSE-MIT'), path.join(pkgDir, 'LICENSE'));
+    fs.writeFileSync(
+      path.join(pkgDir, 'index.js'),
+      "'use strict';\n// Absolute path of the afg binary shipped in this package.\n" +
+        `module.exports = require('node:path').join(__dirname, 'bin', '${exe}');\n`,
+    );
     fs.writeFileSync(path.join(pkgDir, 'README.md'), platformReadme(name, target, version, main.homepage));
     fs.writeFileSync(
       path.join(pkgDir, 'package.json'),
@@ -115,7 +122,8 @@ export function assemble(dist, version, out) {
           bugs: main.bugs,
           os: [os],
           cpu: [cpu],
-          files: ['bin', 'README.md', 'LICENSE-MIT', 'LICENSE-APACHE'],
+          main: 'index.js',
+          files: ['bin', 'index.js', 'README.md', 'LICENSE'],
           preferUnplugged: true,
         },
         null,
@@ -131,7 +139,8 @@ export function assemble(dist, version, out) {
     fs.copyFileSync(path.join(here, 'agentforge-guard', f), path.join(mainDir, f));
   }
   fs.chmodSync(path.join(mainDir, 'bin/afg.js'), 0o755);
-  for (const f of ['README.md', 'LICENSE-MIT', 'LICENSE-APACHE']) fs.copyFileSync(path.join(repoRoot, f), path.join(mainDir, f));
+  fs.copyFileSync(path.join(repoRoot, 'README.md'), path.join(mainDir, 'README.md'));
+  fs.copyFileSync(path.join(repoRoot, 'LICENSE-MIT'), path.join(mainDir, 'LICENSE'));
   main.version = version;
   delete main.scripts;
   fs.writeFileSync(path.join(mainDir, 'package.json'), JSON.stringify(main, null, 2) + '\n');

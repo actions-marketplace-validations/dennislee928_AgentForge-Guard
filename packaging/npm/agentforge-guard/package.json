@@ -13,7 +13,7 @@
     "agent-guard"
   ],
   "author": "AgentForge Guard contributors (https://github.com/dennislee928/AgentForge-Guard/graphs/contributors)",
-  "license": "MIT OR Apache-2.0",
+  "license": "MIT",
   "homepage": "https://github.com/dennislee928/AgentForge-Guard",
   "repository": {
     "type": "git",
@@ -30,8 +30,7 @@
     "bin/afg.js",
     "lib/platform.js",
     "README.md",
-    "LICENSE-MIT",
-    "LICENSE-APACHE"
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18"
