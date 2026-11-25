@@ -1,0 +1,33 @@
+name: n8n Community Node
+
+on:
+  pull_request:
+  push:
+    branches: [main, milestone/n8n-community-node]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/n8n-nodes-agentforge-guard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: packages/n8n-nodes-agentforge-guard/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --locked -p agentforge-guard
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --omit=dev
+      - run: npm pack --dry-run --ignore-scripts

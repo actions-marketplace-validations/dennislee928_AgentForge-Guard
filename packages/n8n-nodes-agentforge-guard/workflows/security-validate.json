@@ -1,0 +1,14 @@
+{
+  "name": "AgentForge Guard - fail closed security validation",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    { "id": "manual", "name": "Run manually", "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [0, 0], "parameters": {} },
+    { "id": "validate", "name": "Validate security", "type": "n8n-nodes-agentforge-guard.agentForgeGuard", "typeVersion": 1, "position": [240, 0], "parameters": { "resource": "security", "operation": "validate", "argv": "[\"terraform\",\"destroy\"]", "requestedBackend": "policy" } },
+    { "id": "success", "name": "Reached only after allow", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [500, 0], "parameters": {} }
+  ],
+  "connections": {
+    "Run manually": { "main": [[{ "node": "Validate security", "type": "main", "index": 0 }]] },
+    "Validate security": { "main": [[{ "node": "Reached only after allow", "type": "main", "index": 0 }]] }
+  }
+}

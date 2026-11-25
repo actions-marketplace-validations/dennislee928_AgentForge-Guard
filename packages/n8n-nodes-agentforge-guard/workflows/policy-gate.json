@@ -1,0 +1,17 @@
+{
+  "name": "AgentForge Guard - explicit policy gate",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    { "id": "manual", "name": "Run manually", "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [0, 0], "parameters": {} },
+    { "id": "evaluate", "name": "Evaluate command", "type": "n8n-nodes-agentforge-guard.agentForgeGuard", "typeVersion": 1, "position": [240, 0], "parameters": { "resource": "policy", "operation": "evaluate", "argv": "[\"git\",\"status\"]", "requestedBackend": "policy" } },
+    { "id": "branch", "name": "Explicit allow only", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [480, 0], "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "allow", "leftValue": "={{ $json.effect }}", "rightValue": "allow", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "options": {} } },
+    { "id": "allow", "name": "Allowed - re-evaluate with afg run before execution", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [760, -120], "parameters": {} },
+    { "id": "stop", "name": "Stop - approval or isolation required or denied", "type": "n8n-nodes-base.stopAndError", "typeVersion": 1, "position": [760, 120], "parameters": { "errorMessage": "AgentForge Guard did not return allow. Do not execute this command." } }
+  ],
+  "connections": {
+    "Run manually": { "main": [[{ "node": "Evaluate command", "type": "main", "index": 0 }]] },
+    "Evaluate command": { "main": [[{ "node": "Explicit allow only", "type": "main", "index": 0 }]] },
+    "Explicit allow only": { "main": [[{ "node": "Allowed - re-evaluate with afg run before execution", "type": "main", "index": 0 }], [{ "node": "Stop - approval or isolation required or denied", "type": "main", "index": 0 }]] }
+  }
+}
