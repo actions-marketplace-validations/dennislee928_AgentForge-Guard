@@ -4,7 +4,7 @@
   "description": "AI agent security policy evaluation for n8n workflows using the AgentForge Guard Rust engine",
   "license": "MIT",
   "homepage": "https://github.com/dennislee928/AgentForge-Guard/tree/main/packages/n8n-nodes-agentforge-guard",
-  "author": { "name": "Dennis Lee", "url": "https://github.com/dennislee928" },
+  "author": { "name": "Dennis Lee", "email": "55692615+dennislee928@users.noreply.github.com", "url": "https://github.com/dennislee928" },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dennislee928/AgentForge-Guard.git",
@@ -36,5 +36,5 @@
     "typescript": "5.9.3",
     "n8n-workflow": "2.49.4"
   },
-  "peerDependencies": { "n8n-workflow": ">=2.49.4 <3" }
+  "peerDependencies": { "n8n-workflow": "*" }
 }
