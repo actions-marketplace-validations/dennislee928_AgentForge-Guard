@@ -1,2 +1,4 @@
 packages:
   - packages/*
+  # Official n8n tooling has an independent npm lockfile and release lifecycle.
+  - '!packages/n8n-nodes-agentforge-guard'
