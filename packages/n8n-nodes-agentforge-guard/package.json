@@ -12,7 +12,15 @@
   },
   "bugs": { "url": "https://github.com/dennislee928/AgentForge-Guard/issues" },
   "keywords": ["n8n-community-node-package", "n8n", "agentforge-guard", "ai-security", "agent-security", "guardrails", "devsecops", "policy-engine"],
-  "files": ["dist", "LICENSE"],
+  "files": [
+    "dist/credentials/AgentForgeGuardApi.credentials.js",
+    "dist/nodes/AgentForgeGuard/AgentForgeGuard.node.js",
+    "dist/nodes/AgentForgeGuard/AgentForgeGuard.node.json",
+    "dist/nodes/AgentForgeGuard/contract.js",
+    "dist/nodes/AgentForgeGuard/agentforge-guard.svg",
+    "dist/nodes/AgentForgeGuard/agentforge-guard.dark.svg",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "n8n-node build",
     "dev": "n8n-node dev",
