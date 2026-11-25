@@ -1,0 +1,40 @@
+{
+  "name": "n8n-nodes-agentforge-guard",
+  "version": "0.1.0",
+  "description": "AI agent security policy evaluation for n8n workflows using the AgentForge Guard Rust engine",
+  "license": "MIT",
+  "homepage": "https://github.com/dennislee928/AgentForge-Guard/tree/main/packages/n8n-nodes-agentforge-guard",
+  "author": { "name": "Dennis Lee", "url": "https://github.com/dennislee928" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dennislee928/AgentForge-Guard.git",
+    "directory": "packages/n8n-nodes-agentforge-guard"
+  },
+  "bugs": { "url": "https://github.com/dennislee928/AgentForge-Guard/issues" },
+  "keywords": ["n8n-community-node-package", "n8n", "agentforge-guard", "ai-security", "agent-security", "guardrails", "devsecops", "policy-engine"],
+  "files": ["dist", "LICENSE"],
+  "scripts": {
+    "build": "n8n-node build",
+    "dev": "n8n-node dev",
+    "lint": "n8n-node lint",
+    "lint:fix": "n8n-node lint --fix",
+    "test": "node --test tests/*.test.cjs",
+    "check": "npm run build && npm run lint && npm test",
+    "prepublishOnly": "npm run check"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": true,
+    "credentials": ["dist/credentials/AgentForgeGuardApi.credentials.js"],
+    "nodes": ["dist/nodes/AgentForgeGuard/AgentForgeGuard.node.js"]
+  },
+  "engines": { "node": ">=22.16" },
+  "publishConfig": { "access": "public" },
+  "devDependencies": {
+    "@n8n/node-cli": "0.58.6",
+    "eslint": "9.39.4",
+    "typescript": "5.9.3",
+    "n8n-workflow": "2.49.4"
+  },
+  "peerDependencies": { "n8n-workflow": ">=2.49.4 <3" }
+}
