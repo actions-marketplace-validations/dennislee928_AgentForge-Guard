@@ -44,5 +44,12 @@
     "typescript": "5.9.3",
     "n8n-workflow": "2.49.4"
   },
-  "peerDependencies": { "n8n-workflow": "*" }
+  "peerDependencies": { "n8n-workflow": "*" },
+  "overrides": {
+    "glob@>=9 <14.0.2": "14.0.2",
+    "minimatch@>=7 <11.0.1": "11.0.9",
+    "qs@<6.16.1": "6.16.1",
+    "stream-json@<3.6.0": "3.6.0",
+    "uuid@<11.1.1": "11.1.1"
+  }
 }

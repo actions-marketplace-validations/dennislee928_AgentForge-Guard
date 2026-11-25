@@ -313,8 +313,9 @@ The existing T15 security work and stable-release review gate remain in force.
 - [x] **T16.3** Create `packages/n8n-nodes-agentforge-guard` using the official node tooling and metadata, credentials, Policy Evaluate, Command Analyze and Security Validate; enforce transport/schema failures without fabricating an allow result.
 - [ ] **T16.4** Add unit/integration and package-artifact tests, CI checks and real self-hosted n8n installation/execution verification.
   - [x] **T16.4a** Unit, real HTTP/Rust and exact artifact tests, plus a pinned-runtime CI gate.
-  - [ ] **T16.4b** Observe the real n8n runtime and Linux isolation gate passing in CI (Docker Desktop is unavailable locally).
+  - [x] **T16.4b** Observe the real n8n runtime and Linux isolation gate passing in CI (Docker Desktop is unavailable locally). Run `45641771911` passed with n8n 2.49.6.
 - [x] **T16.5** Add documented example workflows and gateway setup, including allow/deny branches and failure behavior.
+- [ ] **T16.6** Repair the pre-existing pnpm lockfile drift and remediate new development-tool advisories; preserve the security scan and recheck build/lint/runtime compatibility.
 - **Gate:** Rust DoD, node build/lint/tests, packed artifact checks and self-hosted n8n smoke test; then alignment commit.
 
 ### Phase 17 — Distribution
