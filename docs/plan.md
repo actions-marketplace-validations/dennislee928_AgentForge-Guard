@@ -310,7 +310,7 @@ The existing T15 security work and stable-release review gate remain in force.
 ### Phase 16 — MVP
 - [x] **T16.1** Define the HTTP evaluation contract and security boundary against the existing Rust engine; add this roadmap.
 - [x] **T16.2** Implement an authenticated, bounded, evaluation-only Rust HTTP gateway using `afg-core`; test allow, deny, approval, route, malformed input, trust changes and shared-fixture conformance. Never execute submitted commands.
-- [ ] **T16.3** Create `packages/n8n-nodes-agentforge-guard` using the official node tooling and metadata, credentials, Policy Evaluate, Command Analyze and Security Validate; enforce transport/schema failures without fabricating an allow result.
+- [x] **T16.3** Create `packages/n8n-nodes-agentforge-guard` using the official node tooling and metadata, credentials, Policy Evaluate, Command Analyze and Security Validate; enforce transport/schema failures without fabricating an allow result.
 - [ ] **T16.4** Add unit/integration and package-artifact tests, CI checks and real self-hosted n8n installation/execution verification.
 - [ ] **T16.5** Add documented example workflows and gateway setup, including allow/deny branches and failure behavior.
 - **Gate:** Rust DoD, node build/lint/tests, packed artifact checks and self-hosted n8n smoke test; then alignment commit.
