@@ -17,6 +17,7 @@ mod approve_cmd;
 mod audit_cmd;
 mod backends;
 mod doctor;
+mod gateway;
 mod hook;
 mod init;
 mod policy_cmd;
@@ -65,6 +66,8 @@ enum Command {
     Agents(agents::AgentsCommand),
     /// Approve a pending `require-approval` request (run by a human).
     Approve(approve_cmd::ApproveArgs),
+    /// Serve the authenticated, evaluation-only HTTP API for workflow integrations.
+    Gateway(gateway::GatewayArgs),
 }
 
 fn main() -> ExitCode {
@@ -88,6 +91,7 @@ fn main() -> ExitCode {
         Command::Hook(c) => rt.block_on(hook::run(c)),
         Command::Agents(c) => agents::run(c),
         Command::Approve(a) => approve_cmd::run(a),
+        Command::Gateway(a) => rt.block_on(gateway::run(a)),
     };
     match result {
         Ok(code) => code,
