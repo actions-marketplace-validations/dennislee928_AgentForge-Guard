@@ -45,6 +45,17 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm audit --omit=dev
+      - name: Record accepted upstream development advisory report
+        run: |
+          audit_status=0
+          npm audit --json > development-audit.json || audit_status=$?
+          echo "$audit_status" > development-audit-exit-code.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: n8n-development-advisories
+          path: |
+            packages/n8n-nodes-agentforge-guard/development-audit.json
+            packages/n8n-nodes-agentforge-guard/development-audit-exit-code.txt
       - name: Install pinned self-hosted n8n runtime
         run: npm install --prefix "$RUNNER_TEMP/afg-n8n" --no-audit --no-fund n8n@2.49.6
       - name: Execute packed node in real n8n workflows
@@ -53,10 +64,14 @@ jobs:
           AFG_N8N_BINARY: ${{ runner.temp }}/afg-n8n/node_modules/.bin/n8n
       - run: cargo test --workspace --locked -- --ignored
       - run: npm pack --ignore-scripts
+      - name: Record exact artifact digest
+        run: sha256sum n8n-nodes-agentforge-guard-*.tgz > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: n8n-package
-          path: packages/n8n-nodes-agentforge-guard/*.tgz
+          path: |
+            packages/n8n-nodes-agentforge-guard/*.tgz
+            packages/n8n-nodes-agentforge-guard/SHA256SUMS
           if-no-files-found: error
 
   publish:
@@ -78,10 +93,13 @@ jobs:
       - name: Publish verified tarball with provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish ./dist-n8n/n8n-nodes-agentforge-guard-*.tgz --provenance --access public
+        run: |
+          cd dist-n8n
+          sha256sum --check SHA256SUMS
+          npm publish ./n8n-nodes-agentforge-guard-*.tgz --provenance --access public
       - name: Verify public metadata
         run: npm view n8n-nodes-agentforge-guard name version keywords repository n8n dist.attestations --json
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" ./dist-n8n/*.tgz --verify-tag --title "AgentForge Guard n8n ${GITHUB_REF_NAME#n8n-v}" --notes-file packages/n8n-nodes-agentforge-guard/RELEASE.md
+        run: gh release create "$GITHUB_REF_NAME" ./dist-n8n/*.tgz ./dist-n8n/SHA256SUMS --verify-tag --title "AgentForge Guard n8n ${GITHUB_REF_NAME#n8n-v}" --notes-file packages/n8n-nodes-agentforge-guard/RELEASE.md

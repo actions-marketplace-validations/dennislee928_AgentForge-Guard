@@ -315,7 +315,7 @@ The existing T15 security work and stable-release review gate remain in force.
   - [x] **T16.4a** Unit, real HTTP/Rust and exact artifact tests, plus a pinned-runtime CI gate.
   - [x] **T16.4b** Observe the real n8n runtime and Linux isolation gate passing in CI (Docker Desktop is unavailable locally). Run `45641771911` passed with n8n 2.49.6.
 - [x] **T16.5** Add documented example workflows and gateway setup, including allow/deny branches and failure behavior.
-- [ ] **T16.6** Repair the pre-existing pnpm lockfile drift and remediate new development-tool advisories; preserve the security scan and recheck build/lint/runtime compatibility.
+- [ ] **T16.6** Repair the pre-existing pnpm lockfile drift and assess development-tool advisories; apply compatible fixes or record explicit owner acceptance, preserving the security scan and build/lint/runtime compatibility.
 - **Gate:** Rust DoD, node build/lint/tests, packed artifact checks and self-hosted n8n smoke test; then alignment commit.
 
 ### Phase 17 — Distribution

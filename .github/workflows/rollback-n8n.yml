@@ -1,0 +1,42 @@
+name: Rollback n8n Community Node
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact published integration version to deprecate
+        required: true
+      reason:
+        description: Public explanation and recovery instructions
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deprecate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Validate exact version and reason
+        env:
+          ROLLBACK_VERSION: ${{ inputs.version }}
+          ROLLBACK_REASON: ${{ inputs.reason }}
+        run: node -e 'if(!/^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?$/.test(process.env.ROLLBACK_VERSION) || !process.env.ROLLBACK_REASON.trim()) throw new Error("Exact version and reason required");'
+      - name: Deprecate without deleting publication history
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          ROLLBACK_VERSION: ${{ inputs.version }}
+          ROLLBACK_REASON: ${{ inputs.reason }}
+        run: npm deprecate "n8n-nodes-agentforge-guard@$ROLLBACK_VERSION" "$ROLLBACK_REASON"
+      - name: Record public registry state
+        env:
+          ROLLBACK_VERSION: ${{ inputs.version }}
+        run: npm view "n8n-nodes-agentforge-guard@$ROLLBACK_VERSION" name version deprecated dist --json > rollback-registry.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: n8n-rollback-registry
+          path: rollback-registry.json
