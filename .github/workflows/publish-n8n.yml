@@ -1,0 +1,105 @@
+name: Publish n8n Community Node
+
+on:
+  push:
+    tags: ['n8n-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-n8n-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: startsWith(github.ref, 'refs/tags/n8n-v')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/n8n-nodes-agentforge-guard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: packages/n8n-nodes-agentforge-guard/package-lock.json
+      - name: Tag must match the independent integration version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node -e 'const p=require("./package.json"); if(process.env.RELEASE_TAG !== "n8n-v" + p.version) throw new Error("Tag/version mismatch");'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: Cargo.toml
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --omit=dev
+      - name: Record accepted upstream development advisory report
+        run: |
+          audit_status=0
+          npm audit --json > development-audit.json || audit_status=$?
+          echo "$audit_status" > development-audit-exit-code.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: n8n-development-advisories
+          path: |
+            packages/n8n-nodes-agentforge-guard/development-audit.json
+            packages/n8n-nodes-agentforge-guard/development-audit-exit-code.txt
+      - name: Install pinned self-hosted n8n runtime
+        run: npm install --prefix "$RUNNER_TEMP/afg-n8n" --no-audit --no-fund n8n@2.49.6
+      - name: Execute packed node in real n8n workflows
+        run: npm test -- tests/runtime-smoke.cjs
+        env:
+          AFG_N8N_BINARY: ${{ runner.temp }}/afg-n8n/node_modules/.bin/n8n
+      - run: cargo test --workspace --locked -- --ignored
+      - run: npm pack --ignore-scripts
+      - name: Record exact artifact digest
+        run: sha256sum n8n-nodes-agentforge-guard-*.tgz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: n8n-package
+          path: |
+            packages/n8n-nodes-agentforge-guard/*.tgz
+            packages/n8n-nodes-agentforge-guard/SHA256SUMS
+          if-no-files-found: error
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@v4
+        with:
+          name: n8n-package
+          path: dist-n8n
+      - name: Publish verified tarball with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd dist-n8n
+          sha256sum --check SHA256SUMS
+          npm publish ./n8n-nodes-agentforge-guard-*.tgz --provenance --access public
+      - name: Verify public metadata
+        run: npm view n8n-nodes-agentforge-guard name version keywords repository n8n dist.attestations --json
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" ./dist-n8n/*.tgz ./dist-n8n/SHA256SUMS --verify-tag --title "AgentForge Guard n8n ${GITHUB_REF_NAME#n8n-v}" --notes-file packages/n8n-nodes-agentforge-guard/RELEASE.md

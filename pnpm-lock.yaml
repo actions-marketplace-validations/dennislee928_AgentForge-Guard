@@ -8,6 +8,21 @@ importers:
 
   .: {}
 
+  packages/adoption-worker:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: 5.20261119.1
+        version: 5.20261119.1
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: 5.1.1
+        version: 5.1.1(vite@8.3.8(esbuild@0.28.2))
+      wrangler:
+        specifier: 4.165.0
+        version: 4.165.0(@cloudflare/workers-types@5.20261119.1)(vitest@5.1.1(vite@8.3.8(esbuild@0.28.2)))
+
   packages/cloudflare-adapter:
     devDependencies:
       '@cloudflare/workers-types':
