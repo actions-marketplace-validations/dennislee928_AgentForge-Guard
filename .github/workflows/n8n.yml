@@ -31,3 +31,11 @@ jobs:
       - run: npm test
       - run: npm audit --omit=dev
       - run: npm pack --dry-run --ignore-scripts
+      - name: Install pinned self-hosted n8n runtime
+        run: npm install --prefix "$RUNNER_TEMP/afg-n8n" --no-audit --no-fund n8n@2.49.6
+      - name: Execute packed node in real n8n workflows
+        run: npm test -- tests/runtime-smoke.cjs
+        env:
+          AFG_N8N_BINARY: ${{ runner.temp }}/afg-n8n/node_modules/.bin/n8n
+      - name: Docker isolation suite
+        run: cargo test --workspace --locked -- --ignored
