@@ -1,0 +1,9 @@
+{
+  "node": "n8n-nodes-agentforge-guard.agentForgeGuard",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": ["Development", "Utility"],
+  "resources": {
+    "primaryDocumentation": [{ "url": "https://github.com/dennislee928/AgentForge-Guard/blob/main/packages/n8n-nodes-agentforge-guard/README.md" }]
+  }
+}

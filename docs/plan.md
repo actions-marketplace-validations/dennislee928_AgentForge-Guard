@@ -300,6 +300,41 @@ Goal: every security claim maps to a reproducible test, a CI result and a stated
   - Recruit 3–5 developers and track them in a pinned issue.
 - [ ] **T15.6** Adoption dashboard: a scheduled workflow appends npm, crates.io and GitHub-release download counts, stars, issues and external PRs to `metrics/adoption.jsonl` and renders a chart page. Real numbers only, no vanity metrics.
 
+## Milestone — n8n Community Integration
+
+User scope (2026-11-25): complete MVP, distribution and adoption; commit each
+finished task, align after each phase, and verify public badge evidence. External
+indexing, verification and adoption remain unchecked until independently observed.
+The existing T15 security work and stable-release review gate remain in force.
+
+### Phase 16 — MVP
+- [x] **T16.1** Define the HTTP evaluation contract and security boundary against the existing Rust engine; add this roadmap.
+- [x] **T16.2** Implement an authenticated, bounded, evaluation-only Rust HTTP gateway using `afg-core`; test allow, deny, approval, route, malformed input, trust changes and shared-fixture conformance. Never execute submitted commands.
+- [x] **T16.3** Create `packages/n8n-nodes-agentforge-guard` using the official node tooling and metadata, credentials, Policy Evaluate, Command Analyze and Security Validate; enforce transport/schema failures without fabricating an allow result.
+- [ ] **T16.4** Add unit/integration and package-artifact tests, CI checks and real self-hosted n8n installation/execution verification.
+  - [x] **T16.4a** Unit, real HTTP/Rust and exact artifact tests, plus a pinned-runtime CI gate.
+  - [x] **T16.4b** Observe the real n8n runtime and Linux isolation gate passing in CI (Docker Desktop is unavailable locally). Run `45641771911` passed with n8n 2.49.6.
+- [x] **T16.5** Add documented example workflows and gateway setup, including allow/deny branches and failure behavior.
+- [ ] **T16.6** Repair the pre-existing pnpm lockfile drift and assess development-tool advisories; apply compatible fixes or record explicit owner acceptance, preserving the security scan and build/lint/runtime compatibility.
+- **Gate:** Rust DoD, node build/lint/tests, packed artifact checks and self-hosted n8n smoke test; then alignment commit.
+
+### Phase 17 — Distribution
+- [ ] **T17.1** Add a separate, version-checked GitHub Actions release workflow with npm provenance; publish and verify `n8n-nodes-agentforge-guard@0.1.0`.
+  - [ ] **T17.1a** Separate tag/version check, full runtime release gate, provenance and GitHub release automation.
+  - [ ] **T17.1b** Publish the integration tag after all gates pass; verify registry metadata and provenance.
+- [ ] **T17.2** Verify installation and execution of the published artifact in self-hosted n8n.
+- [ ] **T17.3** Confirm the actual NCNodes package page and record timestamped evidence.
+- [ ] **T17.4** Confirm the actual WorkflowNodes package page and record timestamped evidence; Growing is a separate metric.
+- [ ] **T17.5** Verify npm/crates.io versions and Community Node metadata; add only independently verified README badges.
+- **Gate:** public artifacts, runtime installation and both directory pages observed; then alignment commit. A pending indexer keeps the corresponding task open.
+
+### Phase 18 — Adoption
+- [ ] **T18.1** Submit for official n8n verification and record the submission/outcome; Verified badge only after acceptance.
+- [ ] **T18.2** Publish AI agent security workflow templates with reproducible usage instructions.
+- [ ] **T18.3** Integrate JEF incident handling using its actual supported contract and verify a complete example flow.
+- [ ] **T18.4** Track real npm adoption and third-party usage with reproducible observations; no synthetic downloads.
+- **Gate:** recorded submission, templates, tested JEF integration and real adoption evidence; then alignment commit. An external review is not an agent-completable certification.
+
 ## Verification
 
 - **Every task:** `cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`.
